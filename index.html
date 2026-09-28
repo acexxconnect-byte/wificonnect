@@ -181,25 +181,26 @@
         document.getElementById(screenId).classList.add('active');
     }
 
-// 3. Queue Logic
+    // 3. Queue Logic
     function joinQueue() {
-        showScreen('screen-queue');
-        document.getElementById('queue-title').innerText = 'Joining Line...';
-        document.getElementById('queue-spinner').style.display = 'block';
-        document.getElementById('btn-join-queue').style.display = 'none';
-        
-        // Send request to Cloudflare API
-        fetch(`/api?action=join&mac=${clientMac}`);
+        // Just show the menu immediately. Don't hit the database yet.
+        showScreen('screen-menu');
     }
 
     function requestPlan(planCode, price) {
         showScreen('screen-queue');
-        document.getElementById('queue-title').innerText = 'Waiting for Approval';
+        document.getElementById('queue-title').innerText = 'Connecting...';
         document.getElementById('queue-spinner').style.display = 'block';
-        document.getElementById('queue-message').innerText = `Please hand ₱${price} to the admin.`;
+        document.getElementById('queue-message').innerText = `Requesting ₱${price} plan...`;
         
-        // Send rate choice to Cloudflare API
-        fetch(`/api?action=request&mac=${clientMac}&plan=${planCode}`);
+        // Join the line in the background, then update with the requested plan
+        fetch(`/api?action=join&mac=${clientMac}`)
+            .then(() => fetch(`/api?action=request&mac=${clientMac}&plan=${planCode}`))
+            .then(() => {
+                document.getElementById('queue-title').innerText = 'Waiting for Approval';
+                document.getElementById('queue-spinner').style.display = 'none';
+                document.getElementById('queue-message').innerText = `Please hand ₱${price} to the admin.`;
+            });
     }
 
     // 4. Play/Pause Logic (UI placeholders for now)
@@ -226,27 +227,37 @@
             .then(data => {
                 
                 if (data.type === 'dashboard') {
-                    // User has bought time
+                    // User has bought time and is approved
                     showScreen('screen-dashboard');
                 } 
                 else if (data.type === 'queue') {
-                    // User is in the queue
-                    if (data.data.status === 'active') {
-                        showScreen('screen-menu'); // Show the ₱5 - ₱450 buttons!
+                    // User is in the database queue
+                    if (!data.data.requested_plan) {
+                        // In queue but haven't picked a plan yet
+                        if (!document.getElementById('screen-menu').classList.contains('active')) {
+                            showScreen('screen-menu');
+                        }
                     } else {
-                        showScreen('screen-queue');
-                        document.getElementById('queue-title').innerText = 'Please Wait';
-                        document.getElementById('queue-spinner').style.display = 'none';
-                        document.getElementById('queue-message').innerText = `You are #${data.position} in line.`;
+                        // Picked a plan and waiting for admin
+                        if (!document.getElementById('screen-dashboard').classList.contains('active')) {
+                            showScreen('screen-queue');
+                            document.getElementById('queue-title').innerText = 'Please Wait';
+                            document.getElementById('queue-spinner').style.display = 'none';
+                            document.getElementById('queue-message').innerText = `You are #${data.position} in line. Hand payment to admin.`;
+                            document.getElementById('btn-join-queue').style.display = 'none';
+                        }
                     }
                 } 
                 else {
-                    // User is new (Not in queue, no active time)
-                    showScreen('screen-queue');
-                    document.getElementById('queue-title').innerText = 'Welcome';
-                    document.getElementById('queue-spinner').style.display = 'none';
-                    document.getElementById('queue-message').innerText = 'Click below to view internet rates.';
-                    document.getElementById('btn-join-queue').style.display = 'block';
+                    // Completely new user!
+                    // If they are already looking at the rates menu, don't interrupt them
+                    if (!document.getElementById('screen-menu').classList.contains('active')) {
+                        showScreen('screen-queue');
+                        document.getElementById('queue-title').innerText = 'Welcome';
+                        document.getElementById('queue-spinner').style.display = 'none';
+                        document.getElementById('queue-message').innerText = 'Click below to view internet rates.';
+                        document.getElementById('btn-join-queue').style.display = 'block';
+                    }
                 }
 
             })
