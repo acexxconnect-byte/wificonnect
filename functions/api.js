@@ -13,12 +13,12 @@ export async function onRequest(context) {
     }
 
     try {
-        // ==========================================
+// ==========================================
         // ACTION: ADMIN LIST (View Queue)
         // ==========================================
         if (action === 'admin_list') {
             const { results } = await env.DB.prepare(
-                "SELECT * FROM digital_queue WHERE status = 'waiting' AND requested_plan IS NOT NULL ORDER BY id ASC"
+                "SELECT * FROM digital_queue WHERE status = 'waiting' AND requested_plan IS NOT NULL ORDER BY joined_at ASC"
             ).all();
             
             return Response.json(results || []);
