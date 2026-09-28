@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wi-Fi Portal</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #16a34a;
+            --warning: #f59e0b;
+            --danger: #dc2626;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: #f1f5f9;
+            color: var(--dark);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            padding: 24px;
+            text-align: center;
+        }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        
+        h2 { margin-top: 0; color: var(--dark); }
+        .mac-display { font-size: 0.8rem; color: #64748b; margin-bottom: 20px; }
+
+        /* Menu Styles */
+        .tier-header {
+            background: var(--dark);
+            color: white;
+            padding: 8px;
+            border-radius: 6px;
+            margin: 15px 0 10px 0;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .vip-header {
+            background: linear-gradient(135deg, #fbbf24, #d97706);
+            color: #fff;
+        }
+        .grid-menu {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .btn-rate {
+            background: var(--light);
+            border: 2px solid #e2e8f0;
+            padding: 12px 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn-rate:active { border-color: var(--primary); background: #eff6ff; }
+        .price { color: var(--primary); font-size: 1.1rem; display: block; margin-top: 4px; }
+
+        /* Dashboard Styles */
+        .time-display {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--dark);
+            margin: 20px 0;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .status-playing { background: #dcfce7; color: var(--success); }
+        .status-paused { background: #fef3c7; color: var(--warning); }
+        
+        .btn-action {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .btn-play { background: var(--success); }
+        .btn-pause { background: var(--warning); }
+        .btn-buy-more { background: var(--primary); }
+
+        /* Queue Styles */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="mac-display" id="mac-address-label">Device: Unknown</div>
+
+    <!-- SCREEN 1: LOADING & QUEUE -->
+    <div id="screen-queue" class="screen active">
+        <h2 id="queue-title">Connecting...</h2>
+        <div class="spinner" id="queue-spinner"></div>
+        <p id="queue-message">Checking your device status.</p>
+        <button class="btn-action btn-buy-more" id="btn-join-queue" style="display:none;" onclick="joinQueue()">Buy Wi-Fi Time</button>
+    </div>
+
+    <!-- SCREEN 2: RATE MENU -->
+    <div id="screen-menu" class="screen">
+        <h2>Select Package</h2>
+        <p style="font-size: 0.9rem; color: #64748b;">Hand your cash payment to the admin after tapping.</p>
+        
+        <div class="tier-header">📶 STANDARD (Up to 5 Mbps)</div>
+        <div class="grid-menu">
+            <button class="btn-rate" onclick="requestPlan('1H_5M', 5)">1 Hour <span class="price">₱5</span></button>
+            <button class="btn-rate" onclick="requestPlan('3H_5M', 10)">3 Hours <span class="price">₱10</span></button>
+            <button class="btn-rate" onclick="requestPlan('10H_5M', 20)">10 Hours <span class="price">₱20</span></button>
+            <button class="btn-rate" onclick="requestPlan('1D_5M', 30)">1 Day <span class="price">₱30</span></button>
+        </div>
+
+        <div class="tier-header vip-header">⭐ VIP PROMO (Up to 10 Mbps)</div>
+        <div class="grid-menu">
+            <button class="btn-rate" onclick="requestPlan('3D_10M', 60)">3 Days <span class="price">₱60</span></button>
+            <button class="btn-rate" onclick="requestPlan('7D_10M', 130)">7 Days <span class="price">₱130</span></button>
+            <button class="btn-rate" onclick="requestPlan('15D_10M', 250)">15 Days <span class="price">₱250</span></button>
+            <button class="btn-rate" onclick="requestPlan('30D_10M', 450)">30 Days <span class="price">₱450</span></button>
+        </div>
+    </div>
+
+    <!-- SCREEN 3: DASHBOARD (PLAY/PAUSE) -->
+    <div id="screen-dashboard" class="screen">
+        <h2>Your Connection</h2>
+        <div id="status-badge" class="status-badge status-paused">Paused</div>
+        
+        <div class="time-display" id="time-remaining">00:00</div>
+        <p style="color: #64748b; margin-top: -15px; margin-bottom: 20px;">Remaining Time</p>
+
+        <button class="btn-action btn-play" id="btn-play" onclick="toggleConnection('play')">▶ PLAY INTERNET</button>
+        <button class="btn-action btn-pause" id="btn-pause" onclick="toggleConnection('pause')" style="display:none;">⏸ PAUSE TIME</button>
+        <button class="btn-action btn-buy-more" onclick="joinQueue()" style="margin-top: 15px;">➕ Buy More Time</button>
+    </div>
+</div>
+
+<script>
+    // 1. Capture the MAC address Omada puts in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    let clientMac = urlParams.get('clientMac');
+    
+    // Fallback logic for testing without Omada
+    if (!clientMac) {
+        clientMac = localStorage.getItem('saved_mac') || 'TEST-MAC-' + Math.floor(Math.random() * 1000);
+    }
+    localStorage.setItem('saved_mac', clientMac);
+    document.getElementById('mac-address-label').innerText = 'Device ID: ' + clientMac;
+
+    // 2. Screen Navigation Function
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    // 3. Queue Logic
+    function joinQueue() {
+        showScreen('screen-queue');
+        document.getElementById('queue-title').innerText = 'Joining Line...';
+        document.getElementById('btn-join-queue').style.display = 'none';
+        
+        // TODO: Send AJAX to PHP to insert into digital_queue table
+        // fetch(`api.php?action=join&mac=${clientMac}`)
+    }
+
+    function requestPlan(planCode, price) {
+        showScreen('screen-queue');
+        document.getElementById('queue-title').innerText = 'Waiting for Approval';
+        document.getElementById('queue-message').innerText = `Please hand ₱${price} to the admin.`;
+        
+        // TODO: Send AJAX to PHP to update digital_queue with the requested plan
+        // fetch(`api.php?action=request&mac=${clientMac}&plan=${planCode}`)
+    }
+
+    // 4. Play/Pause Logic
+    function toggleConnection(action) {
+        if (action === 'play') {
+            document.getElementById('btn-play').style.display = 'none';
+            document.getElementById('btn-pause').style.display = 'block';
+            document.getElementById('status-badge').className = 'status-badge status-playing';
+            document.getElementById('status-badge').innerText = 'Connected';
+            // TODO: Send API request to Omada to Authorize
+        } else {
+            document.getElementById('btn-pause').style.display = 'none';
+            document.getElementById('btn-play').style.display = 'block';
+            document.getElementById('status-badge').className = 'status-badge status-paused';
+            document.getElementById('status-badge').innerText = 'Paused';
+            // TODO: Send API request to Omada to Unauthorize
+        }
+    }
+
+    // 5. Background Poller (Runs every 3 seconds)
+    setInterval(() => {
+        // This is where we will fetch the real database status from your PHP script
+        /*
+        fetch(`api.php?action=status&mac=${clientMac}`)
+            .then(res => res.json())
+            .then(data => {
+                // If they have an active session with time remaining -> showScreen('screen-dashboard')
+                // If they are #1 in the queue -> showScreen('screen-menu')
+                // If they are #2 in the queue -> showScreen('screen-queue') + display position
+            });
+        */
+    }, 3000);
+</script>
+
+</body>
+</html>
