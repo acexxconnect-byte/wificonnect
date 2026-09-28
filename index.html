@@ -32,7 +32,6 @@
             justify-content: center;
             min-height: 100vh;
             align-items: center;
-            /* Cyberpunk Grid Background */
             background-image: 
                 linear-gradient(var(--grid-color) 1px, transparent 1px),
                 linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
@@ -53,7 +52,6 @@
             overflow: hidden;
         }
 
-        /* Decorative Corner Accents */
         .container::before, .container::after {
             content: '';
             position: absolute;
@@ -65,7 +63,6 @@
         .container::before { top: 0; left: 0; border-right: none; border-bottom: none; }
         .container::after { bottom: 0; right: 0; border-left: none; border-top: none; }
 
-        /* BRANDING STYLES */
         .brand-header {
             margin-bottom: 25px;
             border-bottom: 1px solid rgba(0, 240, 255, 0.2);
@@ -112,7 +109,6 @@
             display: inline-block;
         }
 
-        /* Menu Styles */
         .tier-header {
             background: rgba(0, 0, 0, 0.6);
             color: var(--primary);
@@ -128,7 +124,7 @@
         }
         
         .vip-header {
-            color: #ffd700; /* Neon Gold */
+            color: #ffd700;
             border-left-color: #ffd700;
             text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
         }
@@ -177,18 +173,11 @@
             font-weight: 900;
         }
 
-        .vip-header + .grid-menu .price {
-            color: #ffd700;
-        }
-        
-        .vip-header + .grid-menu .btn-rate:hover {
-            border-color: #ffd700;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
-        }
+        .vip-header + .grid-menu .price { color: #ffd700; }
+        .vip-header + .grid-menu .btn-rate:hover { border-color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); }
 
-        /* Dashboard Styles */
         .time-display {
-            font-size: 3rem; /* Slightly smaller to fit DD:HH:MM without breaking line */
+            font-size: 2.8rem; /* Adjusted to perfectly fit HH:MM:SS on mobile screens */
             font-family: 'Orbitron', sans-serif;
             font-weight: 900;
             color: var(--primary);
@@ -198,6 +187,7 @@
             border: 1px solid rgba(0, 240, 255, 0.2);
             padding: 10px;
             border-radius: 4px;
+            letter-spacing: 2px;
         }
 
         .status-badge {
@@ -245,7 +235,6 @@
             z-index: 1;
         }
 
-        /* Glitch hover effect pseudo-element */
         .btn-action::before {
             content: '';
             position: absolute;
@@ -258,30 +247,11 @@
         .btn-action:hover::before { transform: scale(1.02); }
         .btn-action:active { transform: scale(0.98); }
 
-        .btn-play { 
-            background: var(--success); 
-            box-shadow: 0 0 15px rgba(57, 255, 20, 0.5);
-        }
-        
-        .btn-pause { 
-            background: var(--warning); 
-            color: white;
-            box-shadow: 0 0 15px rgba(255, 0, 60, 0.5);
-        }
-        
-        .btn-buy-more { 
-            background: transparent;
-            color: var(--primary);
-            border: 2px solid var(--primary);
-            box-shadow: 0 0 10px var(--primary-glow) inset;
-        }
-        
-        .btn-buy-more:hover {
-            background: rgba(0, 240, 255, 0.1);
-            box-shadow: 0 0 15px var(--primary-glow);
-        }
+        .btn-play { background: var(--success); box-shadow: 0 0 15px rgba(57, 255, 20, 0.5); }
+        .btn-pause { background: var(--warning); color: white; box-shadow: 0 0 15px rgba(255, 0, 60, 0.5); }
+        .btn-buy-more { background: transparent; color: var(--primary); border: 2px solid var(--primary); box-shadow: 0 0 10px var(--primary-glow) inset; }
+        .btn-buy-more:hover { background: rgba(0, 240, 255, 0.1); box-shadow: 0 0 15px var(--primary-glow); }
 
-        /* Queue Styles */
         .spinner {
             width: 50px;
             height: 50px;
@@ -293,49 +263,26 @@
             margin: 30px auto;
         }
 
-        #queue-message {
-            font-size: 1.1rem;
-            color: #a8b2d1;
-        }
+        #queue-message { font-size: 1.1rem; color: #a8b2d1; }
 
-        /* Animations */
-        @keyframes spin { 
-            0% { transform: rotate(0deg); } 
-            100% { transform: rotate(360deg); } 
-        }
-        
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 5px var(--primary-glow); }
-            50% { box-shadow: 0 0 20px var(--primary-glow); }
-        }
-
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 5px var(--primary-glow); } 50% { box-shadow: 0 0 20px var(--primary-glow); } }
         @keyframes glitch-anim {
             0% { opacity: 0; transform: translateY(10px) skewX(5deg); filter: hue-rotate(90deg); }
             50% { opacity: 0.8; transform: translateY(-5px) skewX(-5deg); filter: hue-rotate(-90deg); }
             100% { opacity: 1; transform: translateY(0) skewX(0); filter: hue-rotate(0); }
         }
         
-        /* Subtle scanline overlay */
         body::after {
-            content: " ";
-            display: block;
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
+            content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 999;
-            background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
+            z-index: 999; background-size: 100% 2px, 3px 100%; pointer-events: none;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    
-    <!-- BRANDING HEADER -->
     <div class="brand-header">
         <h1>JAC'S WIFI</h1>
         <div class="tagline">>> ELITE GAMING NETWORK <<</div>
@@ -378,9 +325,8 @@
         <h2>UPLINK STATUS</h2>
         <div id="status-badge" class="status-badge status-paused">OFFLINE</div>
         
-        <p style="color: #8892b0; margin-bottom: -10px; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; letter-spacing: 2px;">SYS. TIME REMAINING</p>
-        <div class="time-display" id="time-remaining">00:00</div>
-        
+        <p id="time-label" style="color: #8892b0; margin-bottom: -10px; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; letter-spacing: 2px;">SYS. TIME REMAINING</p>
+        <div class="time-display" id="time-remaining">00:00:00</div>
 
         <button class="btn-action btn-play" id="btn-play" onclick="toggleConnection('play')">ENGAGE UPLINK</button>
         <button class="btn-action btn-pause" id="btn-pause" onclick="toggleConnection('pause')" style="display:none;">SUSPEND UPLINK</button>
@@ -389,27 +335,21 @@
 </div>
 
 <script>
-    // 1. Capture the MAC address Omada puts in the URL
     const urlParams = new URLSearchParams(window.location.search);
     let clientMac = urlParams.get('clientMac');
     
-    // Fallback logic for testing without Omada
     if (!clientMac) {
         clientMac = localStorage.getItem('saved_mac') || 'TEST-MAC-' + Math.floor(Math.random() * 1000);
     }
     localStorage.setItem('saved_mac', clientMac);
     document.getElementById('mac-address-label').innerText = 'SYS_ID: ' + clientMac;
 
-    // 2. Screen Navigation Function
     function showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(screenId).classList.add('active');
     }
 
-    // 3. Queue Logic
-    function joinQueue() {
-        showScreen('screen-menu');
-    }
+    function joinQueue() { showScreen('screen-menu'); }
 
     function requestPlan(planCode, price) {
         showScreen('screen-queue');
@@ -417,7 +357,6 @@
         document.getElementById('queue-spinner').style.display = 'block';
         document.getElementById('queue-message').innerText = `Requesting protocol ₱${price}...`;
         
-        // Join the line in the background, then update with the requested plan
         fetch(`/api?action=join&mac=${clientMac}`)
             .then(() => fetch(`/api?action=request&mac=${clientMac}&plan=${planCode}`))
             .then(() => {
@@ -427,7 +366,6 @@
             });
     }
 
-    // 4. Play/Pause Logic (UI placeholders for now)
     function toggleConnection(action) {
         if (action === 'play') {
             document.getElementById('btn-play').style.display = 'none';
@@ -444,7 +382,45 @@
         }
     }
 
-    // 5. Background Poller (Runs every 3 seconds to check database)
+    // --- NEW SEPARATE TIMER LOGIC ---
+    let sessionEndTime = null;
+    let cachedSecondsLeft = 0;
+    let isPlaying = false;
+
+    // 1-Second Fast UI Tick
+    setInterval(() => {
+        let displaySeconds = 0;
+        
+        if (isPlaying && sessionEndTime) {
+            displaySeconds = Math.floor((sessionEndTime - Date.now()) / 1000);
+        } else {
+            displaySeconds = cachedSecondsLeft;
+        }
+
+        if (displaySeconds < 0) displaySeconds = 0;
+
+        const days = Math.floor(displaySeconds / 86400);
+        const hours = Math.floor((displaySeconds % 86400) / 3600);
+        const mins = Math.floor((displaySeconds % 3600) / 60);
+        const secs = displaySeconds % 60;
+
+        const timeLabel = document.getElementById('time-label');
+        const timeDisplay = document.getElementById('time-remaining');
+
+        if (!timeLabel || !timeDisplay) return;
+
+        if (days > 0) {
+            timeLabel.innerText = "SYS. TIME (DAYS : HOURS)";
+            timeDisplay.innerText = String(days).padStart(2, '0') + ':' + String(hours).padStart(2, '0');
+        } else {
+            timeLabel.innerText = "SYS. TIME (HRS : MIN : SEC)";
+            timeDisplay.innerText = String(hours).padStart(2, '0') + ':' + 
+                                    String(mins).padStart(2, '0') + ':' + 
+                                    String(secs).padStart(2, '0');
+        }
+    }, 1000);
+
+    // 3-Second Background Database Poller
     setInterval(() => {
         fetch(`/api?action=status&mac=${clientMac}`)
             .then(res => res.json())
@@ -452,59 +428,36 @@
                 
                 if (data.type === 'dashboard') {
                     showScreen('screen-dashboard');
-
-                    // 1. Extract session data from the database
                     const session = data.data;
-                    let minutesLeft = session.total_minutes_bought - session.minutes_used;
 
-                    // 2. Adjust for live "playing" time and update buttons
                     if (session.status === 'playing') {
-                        // Calculate minutes passed since they clicked play
                         const startTime = new Date(session.last_play_time + 'Z').getTime();
-                        const minutesPlayed = Math.floor((Date.now() - startTime) / 60000);
-                        minutesLeft -= minutesPlayed;
+                        const secondsPlayed = Math.floor((Date.now() - startTime) / 1000);
+                        
+                        cachedSecondsLeft = (session.total_minutes_bought * 60) - (session.minutes_used * 60) - secondsPlayed;
+                        sessionEndTime = Date.now() + (cachedSecondsLeft * 1000);
+                        isPlaying = true;
 
                         document.getElementById('status-badge').className = 'status-badge status-playing';
                         document.getElementById('status-badge').innerText = 'UPLINK ACTIVE';
                         document.getElementById('btn-play').style.display = 'none';
                         document.getElementById('btn-pause').style.display = 'block';
                     } else {
+                        cachedSecondsLeft = (session.total_minutes_bought * 60) - (session.minutes_used * 60);
+                        isPlaying = false;
+
                         document.getElementById('status-badge').className = 'status-badge status-paused';
                         document.getElementById('status-badge').innerText = 'SUSPENDED';
                         document.getElementById('btn-pause').style.display = 'none';
                         document.getElementById('btn-play').style.display = 'block';
                     }
-
-                    // 3. Calculate Days, Hours, and Minutes
-                    if (minutesLeft <= 0) minutesLeft = 0; // Prevent negative numbers
-                    
-                    const days = Math.floor(minutesLeft / 1440); // 1440 minutes in a day
-                    const hours = Math.floor((minutesLeft % 1440) / 60);
-                    const mins = minutesLeft % 60;
-                    
-                    let timeString = "";
-                    
-                    // Format to DD:HH:MM if they have 24+ hours, otherwise just HH:MM
-                    if (days > 0) {
-                        timeString = String(days).padStart(2, '0') + ':' + 
-                                     String(hours).padStart(2, '0') + ':' + 
-                                     String(mins).padStart(2, '0');
-                    } else {
-                        timeString = String(hours).padStart(2, '0') + ':' + 
-                                     String(mins).padStart(2, '0');
-                    }
-
-                    document.getElementById('time-remaining').innerText = timeString;
                 } 
                 else if (data.type === 'queue') {
-                    // User is in the database queue
                     if (!data.data.requested_plan) {
-                        // In queue but haven't picked a plan yet
                         if (!document.getElementById('screen-menu').classList.contains('active')) {
                             showScreen('screen-menu');
                         }
                     } else {
-                        // Picked a plan and waiting for admin
                         if (!document.getElementById('screen-dashboard').classList.contains('active')) {
                             showScreen('screen-queue');
                             document.getElementById('queue-title').innerText = 'AWAITING AUTH';
@@ -515,7 +468,6 @@
                     }
                 } 
                 else {
-                    // Completely new user!
                     if (!document.getElementById('screen-menu').classList.contains('active')) {
                         showScreen('screen-queue');
                         document.getElementById('queue-title').innerText = 'SYSTEM READY';
