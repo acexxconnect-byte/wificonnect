@@ -20,7 +20,7 @@
     <div class="container">
         <div class="header">
             <h2>Wi-Fi Queue Manager</h2>
-            <span id="queue-count" style="font-weight:bold; color:var(--primary);">0 waiting</span>
+            <span id="queue-count" style="font-weight:bold; color:var(--primary);">Loading...</span>
         </div>
         <div id="queue-list">
             <div class="empty-state">Loading queue...</div>
@@ -33,6 +33,15 @@
                 .then(res => res.json())
                 .then(data => {
                     const list = document.getElementById('queue-list');
+                    
+                    // 1. If the database backend throws an error, display it in red
+                    if (data.error) {
+                        document.getElementById('queue-count').innerText = "Database Error";
+                        list.innerHTML = `<div class="empty-state" style="color: red; font-weight: bold;">Error: ${data.error}</div>`;
+                        return;
+                    }
+                    
+                    // 2. If successful, show the queue
                     document.getElementById('queue-count').innerText = `${data.length} waiting`;
                     
                     if (data.length === 0) {
@@ -45,19 +54,21 @@
                         list.innerHTML += `
                             <div class="card">
                                 <div>
-                                    <div class="mac">${user.mac_address}</div>
+                                    <div class="mac">${user.client_mac}</div>
                                     <div class="plan">Requested: <strong>${user.requested_plan}</strong></div>
                                 </div>
-                                <button class="btn-approve" onclick="approveUser('${user.mac_address}', '${user.requested_plan}', this)">Approve</button>
+                                <button class="btn-approve" onclick="approveUser('${user.client_mac}', '${user.requested_plan}', this)">Approve</button>
                             </div>
                         `;
                     });
                 })
-                .catch(err => console.error("Error loading queue:", err));
+                .catch(err => {
+                    document.getElementById('queue-count').innerText = "Network Error";
+                    document.getElementById('queue-list').innerHTML = `<div class="empty-state" style="color: red;">${err.message}</div>`;
+                });
         }
 
         function approveUser(mac, plan, btnElement) {
-            // Give instant visual feedback when tapped
             btnElement.innerText = "Approving...";
             btnElement.style.opacity = "0.7";
             
