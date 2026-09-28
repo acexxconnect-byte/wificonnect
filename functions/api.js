@@ -7,12 +7,57 @@ export async function onRequest(context) {
     const action = url.searchParams.get('action');
     const mac = url.searchParams.get('mac');
 
-    // 1. Security Check: Always require a MAC address
-    if (!mac) {
+    // 1. Security Check: Require MAC address for all actions EXCEPT admin_list
+    if (!mac && action !== 'admin_list') {
         return Response.json({ error: 'Missing MAC Address' }, { status: 400 });
     }
 
     try {
+        // ==========================================
+        // ACTION: ADMIN LIST (View Queue)
+        // ==========================================
+        if (action === 'admin_list') {
+            const { results } = await env.DB.prepare(
+                "SELECT * FROM digital_queue WHERE status = 'waiting' AND requested_plan IS NOT NULL ORDER BY id ASC"
+            ).all();
+            
+            return Response.json(results || []);
+        }
+        
+        // ==========================================
+        // ACTION: ADMIN APPROVE (Grant Time)
+        // ==========================================
+        if (action === 'admin_approve') {
+            const plan = url.searchParams.get('plan');
+            
+            // Convert plan codes to actual minutes
+            const planMinutes = { 
+                '1H_5M': 60, '3H_5M': 180, '10H_5M': 600, '1D_5M': 1440, 
+                '3D_10M': 4320, '7D_10M': 10080, '15D_10M': 21600, '30D_10M': 43200 
+            };
+            const minutesBought = planMinutes[plan] || 0;
+
+            // 1. Check if user already has an old session
+            const existingSession = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
+            
+            if (existingSession) {
+                // Add time to their existing session
+                await env.DB.prepare(
+                    "UPDATE wifi_sessions SET total_minutes_bought = total_minutes_bought + ?, status = 'paused' WHERE client_mac = ?"
+                ).bind(minutesBought, mac).run();
+            } else {
+                // Create a brand new session
+                await env.DB.prepare(
+                    "INSERT INTO wifi_sessions (client_mac, total_minutes_bought, minutes_used, status) VALUES (?, ?, 0, 'paused')"
+                ).bind(mac, minutesBought).run();
+            }
+
+            // 2. Remove them from the waiting queue
+            await env.DB.prepare("DELETE FROM digital_queue WHERE client_mac = ?").bind(mac).run();
+            
+            return Response.json({ success: true });
+        }
+
         // ==========================================
         // ACTION: CHECK STATUS (Polled every 3 secs)
         // ==========================================
