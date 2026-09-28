@@ -181,54 +181,76 @@
         document.getElementById(screenId).classList.add('active');
     }
 
-    // 3. Queue Logic
+// 3. Queue Logic
     function joinQueue() {
         showScreen('screen-queue');
         document.getElementById('queue-title').innerText = 'Joining Line...';
+        document.getElementById('queue-spinner').style.display = 'block';
         document.getElementById('btn-join-queue').style.display = 'none';
         
-        // TODO: Send AJAX to PHP to insert into digital_queue table
-        // fetch(`api.php?action=join&mac=${clientMac}`)
+        // Send request to Cloudflare API
+        fetch(`/api?action=join&mac=${clientMac}`);
     }
 
     function requestPlan(planCode, price) {
         showScreen('screen-queue');
         document.getElementById('queue-title').innerText = 'Waiting for Approval';
+        document.getElementById('queue-spinner').style.display = 'block';
         document.getElementById('queue-message').innerText = `Please hand ₱${price} to the admin.`;
         
-        // TODO: Send AJAX to PHP to update digital_queue with the requested plan
-        // fetch(`api.php?action=request&mac=${clientMac}&plan=${planCode}`)
+        // Send rate choice to Cloudflare API
+        fetch(`/api?action=request&mac=${clientMac}&plan=${planCode}`);
     }
 
-    // 4. Play/Pause Logic
+    // 4. Play/Pause Logic (UI placeholders for now)
     function toggleConnection(action) {
         if (action === 'play') {
             document.getElementById('btn-play').style.display = 'none';
             document.getElementById('btn-pause').style.display = 'block';
             document.getElementById('status-badge').className = 'status-badge status-playing';
             document.getElementById('status-badge').innerText = 'Connected';
-            // TODO: Send API request to Omada to Authorize
+            fetch(`/api?action=play&mac=${clientMac}`);
         } else {
             document.getElementById('btn-pause').style.display = 'none';
             document.getElementById('btn-play').style.display = 'block';
             document.getElementById('status-badge').className = 'status-badge status-paused';
             document.getElementById('status-badge').innerText = 'Paused';
-            // TODO: Send API request to Omada to Unauthorize
+            fetch(`/api?action=pause&mac=${clientMac}`);
         }
     }
 
-    // 5. Background Poller (Runs every 3 seconds)
+    // 5. Background Poller (Runs every 3 seconds to check database)
     setInterval(() => {
-        // This is where we will fetch the real database status from your PHP script
-        /*
-        fetch(`api.php?action=status&mac=${clientMac}`)
+        fetch(`/api?action=status&mac=${clientMac}`)
             .then(res => res.json())
             .then(data => {
-                // If they have an active session with time remaining -> showScreen('screen-dashboard')
-                // If they are #1 in the queue -> showScreen('screen-menu')
-                // If they are #2 in the queue -> showScreen('screen-queue') + display position
-            });
-        */
+                
+                if (data.type === 'dashboard') {
+                    // User has bought time
+                    showScreen('screen-dashboard');
+                } 
+                else if (data.type === 'queue') {
+                    // User is in the queue
+                    if (data.data.status === 'active') {
+                        showScreen('screen-menu'); // Show the ₱5 - ₱450 buttons!
+                    } else {
+                        showScreen('screen-queue');
+                        document.getElementById('queue-title').innerText = 'Please Wait';
+                        document.getElementById('queue-spinner').style.display = 'none';
+                        document.getElementById('queue-message').innerText = `You are #${data.position} in line.`;
+                    }
+                } 
+                else {
+                    // User is new (Not in queue, no active time)
+                    showScreen('screen-queue');
+                    document.getElementById('queue-title').innerText = 'Welcome';
+                    document.getElementById('queue-spinner').style.display = 'none';
+                    document.getElementById('queue-message').innerText = 'Click below to view internet rates.';
+                    document.getElementById('btn-join-queue').style.display = 'block';
+                }
+
+            })
+            .catch(err => console.error("API Error:", err));
     }, 3000);
 </script>
 
