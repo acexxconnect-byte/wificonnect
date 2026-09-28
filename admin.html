@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; margin: 0; padding: 20px; color: #1e293b; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .card { background: white; padding: 15px 20px; border-radius: 10px; box-shadow: 0 2px 4px rgb(0 0 0 / 0.05); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #f59e0b; }
+        .mac { font-weight: bold; font-size: 1.1rem; }
+        .plan { color: #64748b; font-size: 0.9rem; margin-top: 4px; }
+        .btn-approve { background: #16a34a; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-approve:active { background: #15803d; }
+        .empty-state { text-align: center; color: #64748b; margin-top: 50px; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Wi-Fi Queue Manager</h2>
+            <span id="queue-count" style="font-weight:bold; color:var(--primary);">0 waiting</span>
+        </div>
+        <div id="queue-list">
+            <div class="empty-state">Loading queue...</div>
+        </div>
+    </div>
+
+    <script>
+        function loadQueue() {
+            fetch('/api?action=admin_list')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('queue-list');
+                    document.getElementById('queue-count').innerText = `${data.length} waiting`;
+                    
+                    if (data.length === 0) {
+                        list.innerHTML = '<div class="empty-state">No customers waiting in line.</div>';
+                        return;
+                    }
+                    
+                    list.innerHTML = '';
+                    data.forEach(user => {
+                        list.innerHTML += `
+                            <div class="card">
+                                <div>
+                                    <div class="mac">${user.mac_address}</div>
+                                    <div class="plan">Requested: <strong>${user.requested_plan}</strong></div>
+                                </div>
+                                <button class="btn-approve" onclick="approveUser('${user.mac_address}', '${user.requested_plan}', this)">Approve</button>
+                            </div>
+                        `;
+                    });
+                })
+                .catch(err => console.error("Error loading queue:", err));
+        }
+
+        function approveUser(mac, plan, btnElement) {
+            // Give instant visual feedback when tapped
+            btnElement.innerText = "Approving...";
+            btnElement.style.opacity = "0.7";
+            
+            fetch(`/api?action=admin_approve&mac=${mac}&plan=${plan}`)
+                .then(() => loadQueue());
+        }
+
+        // Refresh the list every 3 seconds
+        setInterval(loadQueue, 3000);
+        loadQueue();
+    </script>
+</body>
+</html>
