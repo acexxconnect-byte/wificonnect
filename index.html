@@ -3,112 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wi-Fi Portal | Gaming Hub</title>
-    
-    <!-- Import futuristic gaming fonts from Google -->
+    <title>Wi-Fi Portal</title>
+    <!-- Add Google Fonts for Gaming Aesthetic -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --neon-blue: #00f3ff;
-            --neon-pink: #ff00ff;
-            --neon-green: #39ff14;
-            --bg-dark: #07070a;
-            --panel-bg: #111116;
-            --text-main: #e2e8f0;
-            --text-muted: #64748b;
+            --primary: #00f0ff; /* Neon Cyan */
+            --primary-glow: rgba(0, 240, 255, 0.5);
+            --success: #39ff14; /* Neon Green */
+            --warning: #ff003c; /* Cyberpunk Red */
+            --danger: #ff003c;
+            --dark: #0a0a0c; /* Deep Void Black */
+            --panel-bg: #111116; /* Slightly lighter dark for panels */
+            --light: #e0e0e0;
+            --grid-color: rgba(0, 240, 255, 0.1);
         }
 
         body {
             font-family: 'Rajdhani', sans-serif;
-            background-color: var(--bg-dark);
-            background-image: 
-                radial-gradient(circle at top right, rgba(0, 243, 255, 0.05), transparent 40%),
-                radial-gradient(circle at bottom left, rgba(255, 0, 255, 0.05), transparent 40%);
-            color: var(--text-main);
+            background-color: var(--dark);
+            color: var(--light);
             margin: 0;
             padding: 20px;
             display: flex;
             justify-content: center;
-            align-items: center;
             min-height: 100vh;
+            align-items: center;
+            /* Cyberpunk Grid Background */
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 30px 30px;
+            background-position: center center;
         }
 
         .container {
-            background: rgba(17, 17, 22, 0.85);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: var(--panel-bg);
             width: 100%;
             max-width: 400px;
-            border-radius: 12px;
-            border: 1px solid rgba(0, 243, 255, 0.2);
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.05), inset 0 0 15px rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 10px var(--primary-glow);
             padding: 30px 24px;
             text-align: center;
             position: relative;
             overflow: hidden;
         }
 
-        /* Decorative top accent for the container */
-        .container::before {
+        /* Decorative Corner Accents */
+        .container::before, .container::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary);
+            transition: all 0.3s ease;
         }
+        .container::before { top: 0; left: 0; border-right: none; border-bottom: none; }
+        .container::after { bottom: 0; right: 0; border-left: none; border-top: none; }
 
-        .screen { display: none; animation: fadeIn 0.3s ease-out; }
+        .screen { display: none; animation: glitch-anim 0.3s ease-out forwards; }
         .screen.active { display: block; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
         
         h2 { 
             font-family: 'Orbitron', sans-serif; 
             margin-top: 0; 
-            color: #fff; 
+            color: var(--primary);
             text-transform: uppercase;
             letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+            text-shadow: 0 0 10px var(--primary-glow);
         }
 
         .mac-display { 
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.75rem; 
-            color: var(--neon-blue); 
-            margin-bottom: 25px; 
-            padding: 5px 10px;
-            background: rgba(0, 243, 255, 0.1);
-            border-radius: 4px;
+            font-size: 0.9rem; 
+            color: #8892b0; 
+            margin-bottom: 20px; 
+            font-family: 'Orbitron', monospace;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px;
+            border: 1px dashed rgba(136, 146, 176, 0.3);
             display: inline-block;
-            letter-spacing: 1px;
-            border: 1px solid rgba(0, 243, 255, 0.3);
         }
 
+        /* Menu Styles */
         .tier-header {
-            font-family: 'Orbitron', sans-serif;
-            background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.15), transparent);
-            color: var(--neon-blue);
-            padding: 8px;
-            margin: 20px 0 10px 0;
+            background: rgba(0, 0, 0, 0.6);
+            color: var(--primary);
+            padding: 10px;
+            border-left: 4px solid var(--primary);
+            margin: 20px 0 15px 0;
             font-weight: 700;
-            font-size: 0.85rem;
-            letter-spacing: 1px;
+            font-size: 1rem;
             text-transform: uppercase;
-            border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+            letter-spacing: 1px;
+            font-family: 'Orbitron', sans-serif;
+            text-align: left;
         }
         
         .vip-header {
-            background: linear-gradient(90deg, transparent, rgba(255, 0, 255, 0.15), transparent);
-            color: var(--neon-pink);
-            border-bottom: 1px solid rgba(255, 0, 255, 0.3);
+            color: #ffd700; /* Neon Gold */
+            border-left-color: #ffd700;
+            text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
         }
 
         .grid-menu {
@@ -118,68 +116,74 @@
         }
 
         .btn-rate {
-            font-family: 'Rajdhani', sans-serif;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(0, 243, 255, 0.3);
-            padding: 12px 5px;
-            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            color: var(--light);
+            padding: 15px 5px;
+            border-radius: 2px;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 1.1rem;
-            color: var(--text-main);
-            transition: all 0.2s ease-in-out;
+            font-family: 'Rajdhani', sans-serif;
+            transition: all 0.2s ease;
             position: relative;
             overflow: hidden;
+            text-transform: uppercase;
         }
 
-        .btn-rate:hover { 
-            border-color: var(--neon-blue); 
-            background: rgba(0, 243, 255, 0.1); 
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3), inset 0 0 10px rgba(0, 243, 255, 0.2);
-            text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+        .btn-rate:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary-glow);
+            background: rgba(0, 240, 255, 0.05);
+            transform: translateY(-2px);
         }
-        
-        .btn-rate:active {
-            transform: scale(0.96);
+
+        .btn-rate:active { 
+            background: var(--primary); 
+            color: var(--dark);
+            transform: translateY(0);
         }
 
         .price { 
-            font-family: 'Orbitron', sans-serif;
-            color: var(--neon-blue); 
-            font-size: 1.2rem; 
+            color: var(--primary); 
+            font-size: 1.3rem; 
             display: block; 
-            margin-top: 6px; 
-            font-weight: 700;
-        }
-
-        /* VIP Buttons override */
-        .vip-btn { border-color: rgba(255, 0, 255, 0.3); }
-        .vip-btn:hover {
-            border-color: var(--neon-pink);
-            background: rgba(255, 0, 255, 0.1);
-            box-shadow: 0 0 15px rgba(255, 0, 255, 0.3), inset 0 0 10px rgba(255, 0, 255, 0.2);
-            text-shadow: 0 0 5px rgba(255, 0, 255, 0.5);
-        }
-        .vip-btn .price { color: var(--neon-pink); }
-
-        .time-display {
+            margin-top: 5px; 
             font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+        }
+
+        .vip-header + .grid-menu .price {
+            color: #ffd700;
+        }
+        
+        .vip-header + .grid-menu .btn-rate:hover {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        /* Dashboard Styles */
+        .time-display {
             font-size: 3.5rem;
-            font-weight: 700;
-            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            color: var(--primary);
             margin: 20px 0;
-            text-shadow: 0 0 20px rgba(0, 243, 255, 0.6);
-            letter-spacing: 2px;
+            text-shadow: 0 0 15px var(--primary-glow);
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            padding: 10px;
+            border-radius: 4px;
         }
 
         .status-badge {
-            font-family: 'Orbitron', sans-serif;
             display: inline-block;
             padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+            border-radius: 2px;
+            font-size: 1rem;
             font-weight: 700;
             margin-bottom: 20px;
+            font-family: 'Orbitron', sans-serif;
             text-transform: uppercase;
             letter-spacing: 1px;
             border: 1px solid transparent;
@@ -187,137 +191,169 @@
 
         .status-playing { 
             background: rgba(57, 255, 20, 0.1); 
-            color: var(--neon-green); 
-            border-color: rgba(57, 255, 20, 0.5);
+            color: var(--success); 
+            border-color: var(--success);
             box-shadow: 0 0 10px rgba(57, 255, 20, 0.2);
-            text-shadow: 0 0 5px var(--neon-green);
         }
-
+        
         .status-paused { 
-            background: rgba(255, 0, 255, 0.1); 
-            color: var(--neon-pink); 
-            border-color: rgba(255, 0, 255, 0.5);
-            box-shadow: 0 0 10px rgba(255, 0, 255, 0.2);
-            text-shadow: 0 0 5px var(--neon-pink);
+            background: rgba(255, 0, 60, 0.1); 
+            color: var(--warning); 
+            border-color: var(--warning);
+            box-shadow: 0 0 10px rgba(255, 0, 60, 0.2);
         }
         
         .btn-action {
-            font-family: 'Orbitron', sans-serif;
             width: 100%;
-            padding: 16px;
-            border: 1px solid transparent;
-            background: transparent;
-            border-radius: 8px;
-            font-size: 1.1rem;
+            padding: 15px;
+            border: none;
+            border-radius: 2px;
+            font-size: 1.2rem;
             font-weight: 700;
-            color: white;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--dark);
             cursor: pointer;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.2s;
+            letter-spacing: 2px;
+            transition: all 0.2s ease;
+            position: relative;
+            z-index: 1;
         }
 
+        /* Glitch hover effect pseudo-element */
+        .btn-action::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: inherit;
+            z-index: -1;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-action:hover::before { transform: scale(1.02); }
         .btn-action:active { transform: scale(0.98); }
 
         .btn-play { 
-            border-color: var(--neon-green); 
-            color: var(--neon-green);
-            background: rgba(57, 255, 20, 0.05);
+            background: var(--success); 
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.5);
         }
-        .btn-play:hover {
-            background: rgba(57, 255, 20, 0.15);
-            box-shadow: 0 0 15px rgba(57, 255, 20, 0.4), inset 0 0 10px rgba(57, 255, 20, 0.2);
-            text-shadow: 0 0 8px var(--neon-green);
-        }
-
+        
         .btn-pause { 
-            border-color: var(--neon-pink); 
-            color: var(--neon-pink);
-            background: rgba(255, 0, 255, 0.05);
+            background: var(--warning); 
+            color: white;
+            box-shadow: 0 0 15px rgba(255, 0, 60, 0.5);
         }
-        .btn-pause:hover {
-            background: rgba(255, 0, 255, 0.15);
-            box-shadow: 0 0 15px rgba(255, 0, 255, 0.4), inset 0 0 10px rgba(255, 0, 255, 0.2);
-            text-shadow: 0 0 8px var(--neon-pink);
-        }
-
+        
         .btn-buy-more { 
-            border-color: var(--neon-blue); 
-            color: var(--neon-blue);
-            background: rgba(0, 243, 255, 0.05);
+            background: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 10px var(--primary-glow) inset;
         }
+        
         .btn-buy-more:hover {
-            background: rgba(0, 243, 255, 0.15);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4), inset 0 0 10px rgba(0, 243, 255, 0.2);
-            text-shadow: 0 0 8px var(--neon-blue);
+            background: rgba(0, 240, 255, 0.1);
+            box-shadow: 0 0 15px var(--primary-glow);
         }
 
+        /* Queue Styles */
         .spinner {
-            width: 45px;
-            height: 45px;
-            border: 3px solid rgba(0, 243, 255, 0.1);
-            border-top: 3px solid var(--neon-blue);
-            border-right: 3px solid var(--neon-blue);
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 240, 255, 0.1);
+            border-top: 3px solid var(--primary);
+            border-right: 3px solid var(--primary);
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 25px auto;
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
-        }
-        @keyframes spin { 
-            0% { transform: rotate(0deg); filter: hue-rotate(0deg); } 
-            100% { transform: rotate(360deg); filter: hue-rotate(45deg); } 
+            animation: spin 1s linear infinite, pulse-glow 2s infinite;
+            margin: 30px auto;
         }
 
-        p { color: var(--text-muted); font-size: 1.05rem; }
+        #queue-message {
+            font-size: 1.1rem;
+            color: #a8b2d1;
+        }
+
+        /* Animations */
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px var(--primary-glow); }
+            50% { box-shadow: 0 0 20px var(--primary-glow); }
+        }
+
+        @keyframes glitch-anim {
+            0% { opacity: 0; transform: translateY(10px) skewX(5deg); filter: hue-rotate(90deg); }
+            50% { opacity: 0.8; transform: translateY(-5px) skewX(-5deg); filter: hue-rotate(-90deg); }
+            100% { opacity: 1; transform: translateY(0) skewX(0); filter: hue-rotate(0); }
+        }
+        
+        /* Subtle scanline overlay */
+        body::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 999;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="mac-display" id="mac-address-label">DEVICE: UNKNOWN</div>
+    <div class="mac-display" id="mac-address-label">SYS_ID: UNKNOWN</div>
 
     <!-- SCREEN 1: LOADING & QUEUE -->
     <div id="screen-queue" class="screen active">
-        <h2 id="queue-title">System Uplink...</h2>
+        <h2 id="queue-title">INITIALIZING...</h2>
         <div class="spinner" id="queue-spinner"></div>
-        <p id="queue-message">Synchronizing device metrics.</p>
-        <button class="btn-action btn-buy-more" id="btn-join-queue" style="display:none;" onclick="joinQueue()">INITIALIZE CONNECTION</button>
+        <p id="queue-message">Establishing secure uplink.</p>
+        <button class="btn-action btn-buy-more" id="btn-join-queue" style="display:none;" onclick="joinQueue()">ACCESS NETWORK</button>
     </div>
 
     <!-- SCREEN 2: RATE MENU -->
     <div id="screen-menu" class="screen">
-        <h2>Select Protocol</h2>
-        <p style="font-size: 0.95rem;">Transfer credits to the network admin to proceed.</p>
+        <h2>SELECT PROTOCOL</h2>
+        <p style="font-size: 0.9rem; color: #8892b0;">Transfer credits to system admin upon selection.</p>
         
-        <div class="tier-header">📶 STANDARD NODE (5 Mbps)</div>
+        <div class="tier-header">>> STD. BANDWIDTH [5MBPS]</div>
         <div class="grid-menu">
             <button class="btn-rate" onclick="requestPlan('1H_5M', 5)">1 Hour <span class="price">₱5</span></button>
             <button class="btn-rate" onclick="requestPlan('3H_5M', 10)">3 Hours <span class="price">₱10</span></button>
             <button class="btn-rate" onclick="requestPlan('10H_5M', 20)">10 Hours <span class="price">₱20</span></button>
-            <button class="btn-rate" onclick="requestPlan('1D_5M', 30)">1 Day <span class="price">₱30</span></button>
+            <button class="btn-rate" onclick="requestPlan('1D_5M', 30)">24 Hours <span class="price">₱30</span></button>
         </div>
 
-        <div class="tier-header vip-header">⭐ VIP OVERCLOCK (10 Mbps)</div>
+        <div class="tier-header vip-header">>> OVERCLOCK [10MBPS]</div>
         <div class="grid-menu">
-            <button class="btn-rate vip-btn" onclick="requestPlan('3D_10M', 60)">3 Days <span class="price">₱60</span></button>
-            <button class="btn-rate vip-btn" onclick="requestPlan('7D_10M', 130)">7 Days <span class="price">₱130</span></button>
-            <button class="btn-rate vip-btn" onclick="requestPlan('15D_10M', 250)">15 Days <span class="price">₱250</span></button>
-            <button class="btn-rate vip-btn" onclick="requestPlan('30D_10M', 450)">30 Days <span class="price">₱450</span></button>
+            <button class="btn-rate" onclick="requestPlan('3D_10M', 60)">3 Days <span class="price">₱60</span></button>
+            <button class="btn-rate" onclick="requestPlan('7D_10M', 130)">7 Days <span class="price">₱130</span></button>
+            <button class="btn-rate" onclick="requestPlan('15D_10M', 250)">15 Days <span class="price">₱250</span></button>
+            <button class="btn-rate" onclick="requestPlan('30D_10M', 450)">30 Days <span class="price">₱450</span></button>
         </div>
     </div>
 
     <!-- SCREEN 3: DASHBOARD (PLAY/PAUSE) -->
     <div id="screen-dashboard" class="screen">
-        <h2>Network Status</h2>
+        <h2>UPLINK STATUS</h2>
         <div id="status-badge" class="status-badge status-paused">OFFLINE</div>
         
+        <p style="color: #8892b0; margin-bottom: -10px; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; letter-spacing: 2px;">SYS. TIME REMAINING</p>
         <div class="time-display" id="time-remaining">00:00</div>
-        <p style="margin-top: -10px; margin-bottom: 25px; font-weight: 600; letter-spacing: 1px;">TIME REMAINING</p>
+        
 
-        <button class="btn-action btn-play" id="btn-play" onclick="toggleConnection('play')">▶ EXECUTE (PLAY)</button>
-        <button class="btn-action btn-pause" id="btn-pause" onclick="toggleConnection('pause')" style="display:none;">⏸ HALT (PAUSE)</button>
-        <button class="btn-action btn-buy-more" onclick="joinQueue()" style="margin-top: 15px;">➕ UPLOAD MORE TIME</button>
+        <button class="btn-action btn-play" id="btn-play" onclick="toggleConnection('play')">ENGAGE UPLINK</button>
+        <button class="btn-action btn-pause" id="btn-pause" onclick="toggleConnection('pause')" style="display:none;">SUSPEND UPLINK</button>
+        <button class="btn-action btn-buy-more" onclick="joinQueue()" style="margin-top: 15px;">AQUIRE MORE TIME</button>
     </div>
 </div>
 
@@ -331,7 +367,7 @@
         clientMac = localStorage.getItem('saved_mac') || 'TEST-MAC-' + Math.floor(Math.random() * 1000);
     }
     localStorage.setItem('saved_mac', clientMac);
-    document.getElementById('mac-address-label').innerText = 'DEVICE ID: ' + clientMac;
+    document.getElementById('mac-address-label').innerText = 'SYS_ID: ' + clientMac;
 
     // 2. Screen Navigation Function
     function showScreen(screenId) {
@@ -347,17 +383,17 @@
 
     function requestPlan(planCode, price) {
         showScreen('screen-queue');
-        document.getElementById('queue-title').innerText = 'Connecting...';
+        document.getElementById('queue-title').innerText = 'ESTABLISHING...';
         document.getElementById('queue-spinner').style.display = 'block';
-        document.getElementById('queue-message').innerText = `Requesting ₱${price} plan...`;
+        document.getElementById('queue-message').innerText = `Requesting protocol ₱${price}...`;
         
         // Join the line in the background, then update with the requested plan
         fetch(`/api?action=join&mac=${clientMac}`)
             .then(() => fetch(`/api?action=request&mac=${clientMac}&plan=${planCode}`))
             .then(() => {
-                document.getElementById('queue-title').innerText = 'Waiting for Approval';
+                document.getElementById('queue-title').innerText = 'AWAITING AUTH';
                 document.getElementById('queue-spinner').style.display = 'none';
-                document.getElementById('queue-message').innerText = `Please hand ₱${price} to the admin.`;
+                document.getElementById('queue-message').innerText = `Transfer ₱${price} to network admin.`;
             });
     }
 
@@ -367,13 +403,13 @@
             document.getElementById('btn-play').style.display = 'none';
             document.getElementById('btn-pause').style.display = 'block';
             document.getElementById('status-badge').className = 'status-badge status-playing';
-            document.getElementById('status-badge').innerText = 'Connected';
+            document.getElementById('status-badge').innerText = 'ACTIVE';
             fetch(`/api?action=play&mac=${clientMac}`);
         } else {
             document.getElementById('btn-pause').style.display = 'none';
             document.getElementById('btn-play').style.display = 'block';
             document.getElementById('status-badge').className = 'status-badge status-paused';
-            document.getElementById('status-badge').innerText = 'Paused';
+            document.getElementById('status-badge').innerText = 'SUSPENDED';
             fetch(`/api?action=pause&mac=${clientMac}`);
         }
     }
@@ -399,9 +435,9 @@
                         // Picked a plan and waiting for admin
                         if (!document.getElementById('screen-dashboard').classList.contains('active')) {
                             showScreen('screen-queue');
-                            document.getElementById('queue-title').innerText = 'Please Wait';
+                            document.getElementById('queue-title').innerText = 'AWAITING AUTH';
                             document.getElementById('queue-spinner').style.display = 'none';
-                            document.getElementById('queue-message').innerText = `You are #${data.position} in line. Hand payment to admin.`;
+                            document.getElementById('queue-message').innerText = `Queue position: #${data.position}. Awaiting payment confirmation.`;
                             document.getElementById('btn-join-queue').style.display = 'none';
                         }
                     }
@@ -411,9 +447,9 @@
                     // If they are already looking at the rates menu, don't interrupt them
                     if (!document.getElementById('screen-menu').classList.contains('active')) {
                         showScreen('screen-queue');
-                        document.getElementById('queue-title').innerText = 'Welcome';
+                        document.getElementById('queue-title').innerText = 'SYSTEM READY';
                         document.getElementById('queue-spinner').style.display = 'none';
-                        document.getElementById('queue-message').innerText = 'Click below to view internet rates.';
+                        document.getElementById('queue-message').innerText = 'Select to view available protocols.';
                         document.getElementById('btn-join-queue').style.display = 'block';
                     }
                 }
