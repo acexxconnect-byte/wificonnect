@@ -177,7 +177,7 @@
         .vip-header + .grid-menu .btn-rate:hover { border-color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); }
 
         .time-display {
-            font-size: 2.8rem; /* Adjusted to perfectly fit HH:MM:SS on mobile screens */
+            font-size: 2.8rem;
             font-family: 'Orbitron', sans-serif;
             font-weight: 900;
             color: var(--primary);
@@ -188,6 +188,7 @@
             padding: 10px;
             border-radius: 4px;
             letter-spacing: 2px;
+            transition: font-size 0.3s ease; /* Smooth transition if sizes change */
         }
 
         .status-badge {
@@ -382,7 +383,7 @@
         }
     }
 
-    // --- NEW SEPARATE TIMER LOGIC ---
+    // --- SEPARATE TIMER LOGIC ---
     let sessionEndTime = null;
     let cachedSecondsLeft = 0;
     let isPlaying = false;
@@ -410,10 +411,14 @@
         if (!timeLabel || !timeDisplay) return;
 
         if (days > 0) {
-            timeLabel.innerText = "SYS. TIME (DAYS : HOURS)";
-            timeDisplay.innerText = String(days).padStart(2, '0') + ':' + String(hours).padStart(2, '0');
+            // Over 24 hours: Shrink font to fit the text string
+            timeLabel.innerText = "SYS. TIME REMAINING";
+            timeDisplay.style.fontSize = "1.5rem";
+            timeDisplay.innerText = `${days} DAYS, ${hours} HRS and ${mins} MINS`;
         } else {
+            // Under 24 hours: Use the massive digital clock font
             timeLabel.innerText = "SYS. TIME (HRS : MIN : SEC)";
+            timeDisplay.style.fontSize = "2.8rem";
             timeDisplay.innerText = String(hours).padStart(2, '0') + ':' + 
                                     String(mins).padStart(2, '0') + ':' + 
                                     String(secs).padStart(2, '0');
