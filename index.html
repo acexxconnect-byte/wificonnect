@@ -188,7 +188,7 @@
 
         /* Dashboard Styles */
         .time-display {
-            font-size: 3.5rem;
+            font-size: 3rem; /* Slightly smaller to fit DD:HH:MM without breaking line */
             font-family: 'Orbitron', sans-serif;
             font-weight: 900;
             color: var(--primary);
@@ -408,7 +408,6 @@
 
     // 3. Queue Logic
     function joinQueue() {
-        // Just show the menu immediately. Don't hit the database yet.
         showScreen('screen-menu');
     }
 
@@ -476,12 +475,26 @@
                         document.getElementById('btn-play').style.display = 'block';
                     }
 
-                    // 3. Format the time to HH:MM and inject it into the screen
+                    // 3. Calculate Days, Hours, and Minutes
                     if (minutesLeft <= 0) minutesLeft = 0; // Prevent negative numbers
-                    const hours = Math.floor(minutesLeft / 60);
+                    
+                    const days = Math.floor(minutesLeft / 1440); // 1440 minutes in a day
+                    const hours = Math.floor((minutesLeft % 1440) / 60);
                     const mins = minutesLeft % 60;
-                    document.getElementById('time-remaining').innerText = 
-                        String(hours).padStart(2, '0') + ':' + String(mins).padStart(2, '0');
+                    
+                    let timeString = "";
+                    
+                    // Format to DD:HH:MM if they have 24+ hours, otherwise just HH:MM
+                    if (days > 0) {
+                        timeString = String(days).padStart(2, '0') + ':' + 
+                                     String(hours).padStart(2, '0') + ':' + 
+                                     String(mins).padStart(2, '0');
+                    } else {
+                        timeString = String(hours).padStart(2, '0') + ':' + 
+                                     String(mins).padStart(2, '0');
+                    }
+
+                    document.getElementById('time-remaining').innerText = timeString;
                 } 
                 else if (data.type === 'queue') {
                     // User is in the database queue
