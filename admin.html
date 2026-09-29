@@ -39,6 +39,28 @@
         .brand-header h1 { font-family: 'Orbitron', sans-serif; color: #fff; margin: 0; text-shadow: 0 0 10px var(--primary-glow); letter-spacing: 2px; }
         .brand-header .tagline { color: var(--primary); font-weight: 700; letter-spacing: 2px; font-size: 0.9rem; }
 
+        /* Login Screen Styles */
+        #login-screen { text-align: center; padding: 40px 20px; }
+        #login-screen h2 { font-family: 'Orbitron', sans-serif; color: var(--warning); text-shadow: 0 0 10px rgba(255, 0, 60, 0.5); margin-bottom: 30px; }
+        
+        .input-field {
+            width: 100%; max-width: 300px; padding: 15px; margin-bottom: 20px; 
+            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 210, 255, 0.3); 
+            color: var(--primary); font-family: 'Orbitron', sans-serif; font-size: 1.2rem; 
+            border-radius: 2px; box-sizing: border-box; transition: 0.2s; text-align: center; letter-spacing: 4px;
+        }
+        .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
+        
+        .btn-action {
+            width: 100%; max-width: 300px; padding: 15px; border: none; border-radius: 2px; font-size: 1.2rem; font-weight: 700;
+            font-family: 'Orbitron', sans-serif; color: #000; background: var(--primary); box-shadow: 0 0 15px var(--primary-glow);
+            cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: all 0.2s ease;
+        }
+        .btn-action:hover { filter: brightness(1.2); }
+
+        /* Dashboard Styles */
+        #dashboard-wrapper { display: none; } /* HIDDEN BY DEFAULT */
+
         .tab-bar { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; }
         .tab {
             flex: 1; background: transparent; color: var(--primary); border: 1px solid var(--primary);
@@ -81,14 +103,7 @@
         .settings-box p, .settings-box li { color: #e0e0e0; font-size: 0.95rem; line-height: 1.5; }
         .code-snippet { background: #000; color: var(--success); padding: 5px 10px; font-family: monospace; border-radius: 3px; }
 
-        /* Calculator Styles */
-        .input-field {
-            width: 100%; padding: 12px; margin-top: 6px; margin-bottom: 15px; 
-            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 210, 255, 0.3); 
-            color: var(--primary); font-family: 'Rajdhani', sans-serif; font-size: 1rem; 
-            border-radius: 2px; box-sizing: border-box; transition: 0.2s;
-        }
-        .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
+        /* Calculator Specific Styles */
         .result-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed rgba(0, 210, 255, 0.2); font-size: 1.05rem; }
         .result-row:last-child { border-bottom: none; }
         .price-text { font-family: 'Orbitron', sans-serif; font-weight: bold; color: var(--success); }
@@ -100,12 +115,29 @@
     </style>
 </head>
 <body>
-    <div class="container">
+
+    <!-- SECURE LOGIN SCREEN -->
+    <div class="container" id="login-screen">
+        <div class="brand-header" style="border:none;">
+            <h1>JAC'S ADMIN</h1>
+            <div class="tagline">>> NETWORK COMMAND CENTER <<</div>
+        </div>
+        
+        <h2>SYSTEM LOCKED</h2>
+        <p style="color: #8892b0; margin-bottom: 20px;">Please enter your Command Code to access the network interface.</p>
+        
+        <input type="password" id="admin-pin" class="input-field" placeholder="••••••••" onkeypress="handleEnter(event)">
+        <br>
+        <button class="btn-action" onclick="verifyLogin()">AUTHORIZE ACCESS</button>
+    </div>
+
+    <!-- MAIN ADMIN DASHBOARD -->
+    <div class="container" id="dashboard-wrapper">
         <div class="brand-header">
             <h1>JAC'S ADMIN</h1>
             <div class="tagline">>> NETWORK COMMAND CENTER <<</div>
-            
             <button id="btn-away-mode" class="btn" style="margin-top: 15px; background: transparent; border: 1px solid var(--primary); color: var(--primary);" onclick="toggleAwayMode()">AWAY MODE (CREDITS): OFF</button>
+            <button class="btn" style="margin-top: 15px; margin-left: 10px; background: transparent; border: 1px solid #555; color: #8892b0;" onclick="logout()">LOGOUT</button>
         </div>
 
         <div class="tab-bar">
@@ -137,13 +169,13 @@
             <div class="settings-box">
                 <h3>>> OPERATING COSTS</h3>
                 <label style="color: #8892b0; font-weight: bold; display: block;">Monthly Internet Bill (₱)</label>
-                <input type="number" id="bill" class="input-field" value="680" oninput="calculateRealTime()">
+                <input type="number" id="bill" class="input-field" style="max-width: 100%; text-align: left; letter-spacing: normal;" value="680" oninput="calculateRealTime()">
                 
                 <label style="color: #8892b0; font-weight: bold; display: block;">Energy Rate (₱ / kWh)</label>
-                <input type="number" id="energy" class="input-field" value="14" oninput="calculateRealTime()">
+                <input type="number" id="energy" class="input-field" style="max-width: 100%; text-align: left; letter-spacing: normal;" value="14" oninput="calculateRealTime()">
                 
                 <label style="color: #8892b0; font-weight: bold; display: block;">AP + Modem Wattage (Watts)</label>
-                <input type="number" id="wattage" class="input-field" value="15" oninput="calculateRealTime()">
+                <input type="number" id="wattage" class="input-field" style="max-width: 100%; text-align: left; letter-spacing: normal;" value="15" oninput="calculateRealTime()">
 
                 <div style="margin-top: 15px; border-top: 1px dashed rgba(0, 210, 255, 0.3); padding-top: 15px;">
                     <div class="result-row">
@@ -160,7 +192,7 @@
             <div class="settings-box">
                 <h3>>> RATE CALCULATOR</h3>
                 <label style="color: #8892b0; font-weight: bold; display: block;">Target Price for 1-Day Protocol (₱)</label>
-                <input type="number" id="targetDaily" class="input-field" value="30" oninput="calculateRealTime()">
+                <input type="number" id="targetDaily" class="input-field" style="max-width: 100%; text-align: left; letter-spacing: normal;" value="30" oninput="calculateRealTime()">
 
                 <div class="warning-box" id="warning-msg"></div>
 
@@ -195,6 +227,53 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <script>
+        // ==========================================
+        // SECURITY & LOGIN LOGIC
+        // ==========================================
+        const MASTER_PIN = "JACS2026"; // Change this to your preferred secret code
+        let pollerInterval;
+
+        // Check if already logged in this session
+        if (sessionStorage.getItem('jac_admin_auth') === 'verified') {
+            unlockDashboard();
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') verifyLogin();
+        }
+
+        function verifyLogin() {
+            const entered = document.getElementById('admin-pin').value;
+            if (entered === MASTER_PIN) {
+                sessionStorage.setItem('jac_admin_auth', 'verified');
+                unlockDashboard();
+            } else {
+                alert("ACCESS DENIED: Invalid Command Code");
+                document.getElementById('admin-pin').value = '';
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('jac_admin_auth');
+            document.getElementById('login-screen').style.display = 'block';
+            document.getElementById('dashboard-wrapper').style.display = 'none';
+            document.getElementById('admin-pin').value = '';
+            if(pollerInterval) clearInterval(pollerInterval);
+        }
+
+        function unlockDashboard() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('dashboard-wrapper').style.display = 'block';
+            
+            // Start the data fetching only AFTER they login
+            calculateRealTime();
+            fetchData();
+            pollerInterval = setInterval(fetchData, 3000);
+        }
+
+        // ==========================================
+        // ADMIN DASHBOARD LOGIC
+        // ==========================================
         let currentTab = 'queue';
         let map = null;
         let currentMarker = null;
@@ -394,7 +473,9 @@
         function suspendUser(mac, btn) { btn.innerText = "WAIT..."; fetch(`/api?action=admin_suspend&mac=${mac}`).then(() => fetchData()); }
         function clearCredit(id, btn) { btn.innerText = "WAIT..."; fetch(`/api?action=admin_clear_credit&id=${id}`).then(() => fetchData()); }
 
-        // Calculator Logic
+        // ==========================================
+        // PROFIT CALCULATOR LOGIC
+        // ==========================================
         function calculateRealTime() {
             let bill = parseFloat(document.getElementById('bill').value) || 0;
             let energy = parseFloat(document.getElementById('energy').value) || 0;
@@ -430,11 +511,6 @@
             document.getElementById('r-15d').innerText = '₱' + Math.round((targetDaily * 15) * 0.666);
             document.getElementById('r-30d').innerText = '₱' + Math.round((targetDaily * 30) * 0.555);
         }
-
-        // Initialize Data and Calculator
-        calculateRealTime();
-        setInterval(fetchData, 3000);
-        fetchData();
     </script>
 </body>
 </html>
