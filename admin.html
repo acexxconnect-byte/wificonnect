@@ -9,10 +9,17 @@
     
     <style>
         :root {
-            --primary: #00f0ff; --primary-glow: rgba(0, 240, 255, 0.5);
-            --success: #39ff14; --warning: #ff003c; --danger: #ff003c;
-            --dark: #0a0a0c; --panel-bg: #111116; --light: #e0e0e0;
-            --grid-color: rgba(0, 240, 255, 0.05);
+            --primary: #00d2ff;
+            --primary-glow: rgba(0, 210, 255, 0.5);
+            --secondary: #ff8c00;
+            --secondary-glow: rgba(255, 140, 0, 0.5);
+            --success: #ff8c00;
+            --warning: #ff003c; 
+            --danger: #ff003c;
+            --dark: #0a0a0c; 
+            --panel-bg: #111116; 
+            --light: #e0e0e0;
+            --grid-color: rgba(0, 210, 255, 0.05);
         }
 
         body {
@@ -24,11 +31,11 @@
 
         .container {
             max-width: 800px; margin: 0 auto; background: var(--panel-bg);
-            border: 1px solid rgba(0, 240, 255, 0.2); box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 10px var(--primary-glow);
+            border: 1px solid rgba(0, 210, 255, 0.2); box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 10px var(--primary-glow);
             padding: 20px; border-radius: 4px; position: relative;
         }
 
-        .brand-header { border-bottom: 1px solid rgba(0, 240, 255, 0.2); padding-bottom: 15px; margin-bottom: 20px; text-align: center; }
+        .brand-header { border-bottom: 1px solid rgba(0, 210, 255, 0.2); padding-bottom: 15px; margin-bottom: 20px; text-align: center; }
         .brand-header h1 { font-family: 'Orbitron', sans-serif; color: #fff; margin: 0; text-shadow: 0 0 10px var(--primary-glow); letter-spacing: 2px; }
         .brand-header .tagline { color: var(--primary); font-weight: 700; letter-spacing: 2px; font-size: 0.9rem; }
 
@@ -43,7 +50,7 @@
         .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
 
         .card {
-            background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(0, 240, 255, 0.2); border-left: 4px solid var(--primary);
+            background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(0, 210, 255, 0.2); border-left: 4px solid var(--primary);
             padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
         }
         .card.active-client { border-left-color: var(--success); }
@@ -55,24 +62,39 @@
 
         .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
         .btn { padding: 8px 15px; border: none; font-family: 'Orbitron', sans-serif; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; border-radius: 2px; transition: 0.2s; }
-        .btn-approve { background: var(--success); color: #000; box-shadow: 0 0 10px rgba(57, 255, 20, 0.3); }
+        .btn-approve { background: var(--success); color: #000; box-shadow: 0 0 10px var(--secondary-glow); }
         .btn-decline { background: transparent; color: var(--danger); border: 1px solid var(--danger); box-shadow: inset 0 0 5px rgba(255, 0, 60, 0.3); }
         .btn-suspend { background: var(--warning); color: #fff; box-shadow: 0 0 10px rgba(255, 0, 60, 0.3); }
-        .btn-locate { background: transparent; color: #00f0ff; border: 1px solid #00f0ff; box-shadow: inset 0 0 5px rgba(0, 240, 255, 0.3); }
+        .btn-locate { background: transparent; color: var(--primary); border: 1px solid var(--primary); box-shadow: inset 0 0 5px rgba(0, 210, 255, 0.3); }
         .btn:hover { filter: brightness(1.2); }
 
         .empty-state { text-align: center; color: #8892b0; padding: 40px 0; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; }
 
-        #credit-map { height: 250px; width: 100%; border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 4px; margin-bottom: 20px; display: none; z-index: 1; }
+        #credit-map { height: 250px; width: 100%; border: 1px solid rgba(0, 210, 255, 0.3); border-radius: 4px; margin-bottom: 20px; display: none; z-index: 1; }
         
         .leaflet-layer, .leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-control-attribution {
             filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
         }
 
-        .settings-box { border: 1px dashed rgba(0, 240, 255, 0.3); padding: 15px; margin-bottom: 15px; background: rgba(0,0,0,0.3); }
+        .settings-box { border: 1px dashed rgba(0, 210, 255, 0.3); padding: 15px; margin-bottom: 15px; background: rgba(0,0,0,0.3); }
         .settings-box h3 { color: var(--primary); font-family: 'Orbitron', sans-serif; margin-top: 0; }
         .settings-box p, .settings-box li { color: #e0e0e0; font-size: 0.95rem; line-height: 1.5; }
-        .code-snippet { background: #000; color: #39ff14; padding: 5px 10px; font-family: monospace; border-radius: 3px; }
+        .code-snippet { background: #000; color: var(--success); padding: 5px 10px; font-family: monospace; border-radius: 3px; }
+
+        /* Calculator Styles */
+        .input-field {
+            width: 100%; padding: 12px; margin-top: 6px; margin-bottom: 15px; 
+            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 210, 255, 0.3); 
+            color: var(--primary); font-family: 'Rajdhani', sans-serif; font-size: 1rem; 
+            border-radius: 2px; box-sizing: border-box; transition: 0.2s;
+        }
+        .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
+        .result-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed rgba(0, 210, 255, 0.2); font-size: 1.05rem; }
+        .result-row:last-child { border-bottom: none; }
+        .price-text { font-family: 'Orbitron', sans-serif; font-weight: bold; color: var(--success); }
+        .break-even { color: var(--warning); font-family: 'Orbitron', sans-serif; font-weight: bold; }
+        .warning-box { background: rgba(255, 0, 60, 0.1); color: var(--warning); border: 1px solid var(--warning); padding: 12px; border-radius: 2px; font-weight: bold; font-size: 0.9rem; margin-top: 15px; text-align: center; display: none; text-shadow: 0 0 5px rgba(255, 0, 60, 0.5); }
+        .section-label { background: rgba(0, 210, 255, 0.1); padding: 8px; border-left: 3px solid var(--primary); color: var(--primary); margin-top: 20px; font-weight: bold; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -83,7 +105,6 @@
             <h1>JAC'S ADMIN</h1>
             <div class="tagline">>> NETWORK COMMAND CENTER <<</div>
             
-            <!-- MASTER AWAY MODE SWITCH -->
             <button id="btn-away-mode" class="btn" style="margin-top: 15px; background: transparent; border: 1px solid var(--primary); color: var(--primary);" onclick="toggleAwayMode()">AWAY MODE (CREDITS): OFF</button>
         </div>
 
@@ -91,6 +112,7 @@
             <div class="tab active" onclick="switchTab('queue')">PENDING (<span id="queue-count">0</span>)</div>
             <div class="tab" onclick="switchTab('active')">ACTIVE UPLINKS</div>
             <div class="tab" style="border-color: var(--warning); color: var(--warning);" onclick="switchTab('credits')">UNPAID CREDITS</div>
+            <div class="tab" onclick="switchTab('calc')">PROFIT CALC</div>
             <div class="tab" onclick="switchTab('settings')">SYS SETTINGS</div>
         </div>
 
@@ -110,7 +132,53 @@
             <div id="credits-list"><div class="empty-state">SCANNING DATABASE...</div></div>
         </div>
 
-        <!-- TAB 4: SYSTEM SETTINGS -->
+        <!-- TAB 4: PROFIT CALCULATOR -->
+        <div id="tab-calc" class="tab-content">
+            <div class="settings-box">
+                <h3>>> OPERATING COSTS</h3>
+                <label style="color: #8892b0; font-weight: bold; display: block;">Monthly Internet Bill (₱)</label>
+                <input type="number" id="bill" class="input-field" value="680" oninput="calculateRealTime()">
+                
+                <label style="color: #8892b0; font-weight: bold; display: block;">Energy Rate (₱ / kWh)</label>
+                <input type="number" id="energy" class="input-field" value="14" oninput="calculateRealTime()">
+                
+                <label style="color: #8892b0; font-weight: bold; display: block;">AP + Modem Wattage (Watts)</label>
+                <input type="number" id="wattage" class="input-field" value="15" oninput="calculateRealTime()">
+
+                <div style="margin-top: 15px; border-top: 1px dashed rgba(0, 210, 255, 0.3); padding-top: 15px;">
+                    <div class="result-row">
+                        <span>Total Monthly Cost:</span>
+                        <span class="price-text" id="out-monthly">₱0.00</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Daily Break-Even:</span>
+                        <span class="break-even" id="out-daily">₱0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-box">
+                <h3>>> RATE CALCULATOR</h3>
+                <label style="color: #8892b0; font-weight: bold; display: block;">Target Price for 1-Day Protocol (₱)</label>
+                <input type="number" id="targetDaily" class="input-field" value="30" oninput="calculateRealTime()">
+
+                <div class="warning-box" id="warning-msg"></div>
+
+                <div class="section-label">Standard Protocols</div>
+                <div class="result-row"><span>1 Hour</span> <span class="price-text" id="r-1h">₱0</span></div>
+                <div class="result-row"><span>3 Hours</span> <span class="price-text" id="r-3h">₱0</span></div>
+                <div class="result-row"><span>10 Hours</span> <span class="price-text" id="r-10h">₱0</span></div>
+                <div class="result-row"><span>24 Hours (1 Day)</span> <span class="price-text" id="r-1d">₱0</span></div>
+
+                <div class="section-label">Overclock / VIP Protocols</div>
+                <div class="result-row"><span>3 Days</span> <span class="price-text" id="r-3d">₱0</span></div>
+                <div class="result-row"><span>7 Days</span> <span class="price-text" id="r-7d">₱0</span></div>
+                <div class="result-row"><span>15 Days</span> <span class="price-text" id="r-15d">₱0</span></div>
+                <div class="result-row"><span>30 Days</span> <span class="price-text" id="r-30d">₱0</span></div>
+            </div>
+        </div>
+
+        <!-- TAB 5: SYSTEM SETTINGS -->
         <div id="tab-settings" class="tab-content">
             <div class="settings-box">
                 <h3>SECURITY: BLOCK ADULT SITES</h3>
@@ -233,7 +301,7 @@
                 });
         }
 
-       function loadCredits() {
+        function loadCredits() {
             fetch('/api?action=admin_credit_list')
                 .then(res => res.json())
                 .then(data => {
@@ -251,7 +319,6 @@
                         const lat = user.lat || '';
                         const lng = user.lng || '';
                         
-                        // Format the coordinates to look clean
                         let gpsDisplay = (lat && lng && lat !== 'null' && lat !== '') 
                             ? `GPS: ${parseFloat(lat).toFixed(5)}, ${parseFloat(lng).toFixed(5)}` 
                             : 'GPS: Not acquired';
@@ -272,14 +339,13 @@
                     });
                 });
         }
-        // Smart Mapping: Uses GPS if available, falls back to text search if missing!
+
         function locateOnMap(name, typedAddress, lat, lng) {
             const mapDiv = document.getElementById('credit-map');
             mapDiv.style.display = 'block';
             
-            // Initialize map if it doesn't exist yet
             if (!map) {
-                map = L.map('credit-map').setView([8.5866, 123.3408], 13); // Default Dipolog City
+                map = L.map('credit-map').setView([8.5866, 123.3408], 13);
                 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
                 }).addTo(map);
@@ -287,7 +353,6 @@
             
             setTimeout(() => { map.invalidateSize(); }, 300);
 
-            // SCENARIO 1: We have exact GPS Coordinates
             if (lat && lng && lat !== 'null' && lng !== 'null' && lat !== '') {
                 map.flyTo([lat, lng], 18);
                 if (currentMarker) map.removeLayer(currentMarker);
@@ -298,7 +363,6 @@
                     
                 mapDiv.scrollIntoView({ behavior: 'smooth' });
             } 
-            // SCENARIO 2: No GPS (Old entry or failed device). Fallback to Address Search!
             else {
                 const searchQuery = encodeURIComponent(typedAddress + ", Dipolog City, Zamboanga del Norte, Philippines");
                 
@@ -324,12 +388,51 @@
                     .catch(err => console.error("Geocoding Error:", err));
             }
         }
-        
+
         function approveUser(mac, plan, btn) { btn.innerText = "WAIT..."; fetch(`/api?action=admin_approve&mac=${mac}&plan=${plan}`).then(() => fetchData()); }
         function declineUser(mac, btn) { btn.innerText = "WAIT..."; fetch(`/api?action=admin_decline&mac=${mac}`).then(() => fetchData()); }
         function suspendUser(mac, btn) { btn.innerText = "WAIT..."; fetch(`/api?action=admin_suspend&mac=${mac}`).then(() => fetchData()); }
         function clearCredit(id, btn) { btn.innerText = "WAIT..."; fetch(`/api?action=admin_clear_credit&id=${id}`).then(() => fetchData()); }
 
+        // Calculator Logic
+        function calculateRealTime() {
+            let bill = parseFloat(document.getElementById('bill').value) || 0;
+            let energy = parseFloat(document.getElementById('energy').value) || 0;
+            let wattage = parseFloat(document.getElementById('wattage').value) || 0;
+            let targetDailyInput = document.getElementById('targetDaily');
+            let targetDaily = parseFloat(targetDailyInput.value) || 0;
+
+            let monthlyElec = (wattage / 1000) * 24 * 30 * energy;
+            let monthlyTotal = bill + monthlyElec;
+            let dailyBreakEven = monthlyTotal / 30;
+
+            document.getElementById('out-monthly').innerText = '₱' + monthlyTotal.toFixed(2);
+            document.getElementById('out-daily').innerText = '₱' + dailyBreakEven.toFixed(2);
+
+            let warningBox = document.getElementById('warning-msg');
+            
+            if (targetDaily < dailyBreakEven) {
+                let safePrice = Math.ceil(dailyBreakEven / 5) * 5;
+                warningBox.innerText = '⚠️ AUTO-ADJUSTED: Calculated at ₱' + safePrice + ' minimum to prevent loss.';
+                warningBox.style.display = 'block';
+                targetDaily = safePrice; 
+            } else {
+                warningBox.style.display = 'none';
+            }
+
+            document.getElementById('r-1h').innerText = '₱' + Math.round(targetDaily / 6);
+            document.getElementById('r-3h').innerText = '₱' + Math.round(targetDaily / 3);
+            document.getElementById('r-10h').innerText = '₱' + Math.round(targetDaily * 0.66);
+            document.getElementById('r-1d').innerText = '₱' + targetDaily;
+
+            document.getElementById('r-3d').innerText = '₱' + Math.round((targetDaily * 3) * 0.78);
+            document.getElementById('r-7d').innerText = '₱' + Math.round((targetDaily * 7) * 0.715);
+            document.getElementById('r-15d').innerText = '₱' + Math.round((targetDaily * 15) * 0.666);
+            document.getElementById('r-30d').innerText = '₱' + Math.round((targetDaily * 30) * 0.555);
+        }
+
+        // Initialize Data and Calculator
+        calculateRealTime();
         setInterval(fetchData, 3000);
         fetchData();
     </script>
