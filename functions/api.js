@@ -1,170 +1,357 @@
-export async function onRequest(context) {
-    const { request, env } = context;
-    const url = new URL(request.url);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JAC'S WIFI Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     
-    const action = url.searchParams.get('action');
-    const mac = url.searchParams.get('mac');
-
-    // 1. Security Check: Allow the admin dashboard to fetch lists without a MAC address
-    if (!mac && action !== 'admin_list' && action !== 'admin_active_list') {
-        return Response.json({ error: 'Missing MAC Address' }, { status: 400 });
-    }
-
-    try {
-        // ==========================================
-        // ACTION: ADMIN LIST (View Pending Queue)
-        // ==========================================
-        if (action === 'admin_list') {
-            const { results } = await env.DB.prepare(
-                "SELECT * FROM digital_queue WHERE status = 'waiting' AND requested_plan IS NOT NULL ORDER BY joined_at ASC"
-            ).all();
-            return Response.json(results || []);
+    <style>
+        :root {
+            --primary: #00f0ff; --primary-glow: rgba(0, 240, 255, 0.5);
+            --success: #39ff14; --warning: #ff003c; --danger: #ff003c;
+            --dark: #0a0a0c; --panel-bg: #111116; --light: #e0e0e0;
+            --grid-color: rgba(0, 240, 255, 0.1);
         }
 
-        // ==========================================
-        // ACTION: ADMIN ACTIVE LIST (View Connected Users)
-        // ==========================================
-        if (action === 'admin_active_list') {
-            const { results } = await env.DB.prepare(
-                "SELECT * FROM wifi_sessions WHERE status = 'playing' ORDER BY last_play_time DESC"
-            ).all();
-            return Response.json(results || []);
+        body {
+            font-family: 'Rajdhani', sans-serif; background-color: var(--dark); color: var(--light);
+            margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; align-items: center;
+            background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 30px 30px; background-position: center center;
+        }
+
+        .container {
+            background: var(--panel-bg); width: 100%; max-width: 400px; border-radius: 4px;
+            border: 1px solid rgba(0, 240, 255, 0.2); box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 10px var(--primary-glow);
+            padding: 30px 24px; text-align: center; position: relative; overflow: hidden;
+        }
+
+        .container::before, .container::after {
+            content: ''; position: absolute; width: 20px; height: 20px; border: 2px solid var(--primary); transition: all 0.3s ease;
+        }
+        .container::before { top: 0; left: 0; border-right: none; border-bottom: none; }
+        .container::after { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+        .brand-header { margin-bottom: 25px; border-bottom: 1px solid rgba(0, 240, 255, 0.2); padding-bottom: 15px; }
+        .brand-header h1 { font-family: 'Orbitron', sans-serif; color: #fff; font-size: 2.2rem; margin: 0 0 5px 0; text-shadow: 0 0 10px var(--primary-glow), 0 0 20px var(--primary); letter-spacing: 3px; }
+        .brand-header .tagline { font-family: 'Rajdhani', sans-serif; color: var(--primary); font-size: 0.95rem; font-weight: 700; letter-spacing: 2px; }
+
+        .screen { display: none; animation: glitch-anim 0.3s ease-out forwards; }
+        .screen.active { display: block; }
+        
+        h2 { font-family: 'Orbitron', sans-serif; margin-top: 0; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px var(--primary-glow); }
+
+        .mac-display { 
+            font-size: 0.9rem; color: #8892b0; margin-bottom: 20px; font-family: 'Orbitron', monospace;
+            background: rgba(0, 0, 0, 0.5); padding: 5px; border: 1px dashed rgba(136, 146, 176, 0.3); display: inline-block;
+        }
+
+        .tier-header {
+            background: rgba(0, 0, 0, 0.6); color: var(--primary); padding: 10px; border-left: 4px solid var(--primary);
+            margin: 20px 0 15px 0; font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; font-family: 'Orbitron', sans-serif; text-align: left;
         }
         
-        // ==========================================
-        // ACTION: ADMIN APPROVE (Grant Time)
-        // ==========================================
-        if (action === 'admin_approve') {
-            const plan = url.searchParams.get('plan');
-            
-            const planMinutes = { 
-                '1H_5M': 60, '3H_5M': 180, '10H_5M': 600, '1D_5M': 1440, 
-                '3D_10M': 4320, '7D_10M': 10080, '15D_10M': 21600, '30D_10M': 43200 
-            };
-            const minutesBought = planMinutes[plan] || 0;
+        .vip-header { color: #ffd700; border-left-color: #ffd700; text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+        .credit-header { color: var(--warning); border-left-color: var(--warning); text-shadow: 0 0 5px rgba(255, 0, 60, 0.5); }
 
-            const existingSession = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
-            
-            if (existingSession) {
-                await env.DB.prepare(
-                    "UPDATE wifi_sessions SET total_minutes_bought = total_minutes_bought + ?, status = 'paused' WHERE client_mac = ?"
-                ).bind(minutesBought, mac).run();
-            } else {
-                await env.DB.prepare(
-                    "INSERT INTO wifi_sessions (client_mac, total_minutes_bought, minutes_used, status) VALUES (?, ?, 0, 'paused')"
-                ).bind(mac, minutesBought).run();
-            }
+        .grid-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-            await env.DB.prepare("DELETE FROM digital_queue WHERE client_mac = ?").bind(mac).run();
-            return Response.json({ success: true });
+        .btn-rate {
+            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 240, 255, 0.3); color: var(--light);
+            padding: 15px 5px; border-radius: 2px; cursor: pointer; font-weight: 700; font-size: 1.1rem;
+            font-family: 'Rajdhani', sans-serif; transition: all 0.2s ease; position: relative; overflow: hidden; text-transform: uppercase;
+        }
+        .btn-rate:hover { border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); background: rgba(0, 240, 255, 0.05); transform: translateY(-2px); }
+        .btn-rate:active { background: var(--primary); color: var(--dark); transform: translateY(0); }
+
+        .price { color: var(--primary); font-size: 1.3rem; display: block; margin-top: 5px; font-family: 'Orbitron', sans-serif; font-weight: 900; }
+        .vip-header + .grid-menu .price { color: #ffd700; }
+        .vip-header + .grid-menu .btn-rate:hover { border-color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); }
+
+        .time-display {
+            font-size: 2.8rem; font-family: 'Orbitron', sans-serif; font-weight: 900; color: var(--primary);
+            margin: 20px 0; text-shadow: 0 0 15px var(--primary-glow); background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(0, 240, 255, 0.2); padding: 10px; border-radius: 4px; letter-spacing: 2px; transition: font-size 0.3s ease;
         }
 
-        // ==========================================
-        // ACTION: ADMIN DECLINE (Reject/Remove User)
-        // ==========================================
-        if (action === 'admin_decline') {
-            await env.DB.prepare("DELETE FROM digital_queue WHERE client_mac = ?").bind(mac).run();
-            return Response.json({ success: true });
+        .status-badge {
+            display: inline-block; padding: 6px 16px; border-radius: 2px; font-size: 1rem; font-weight: 700;
+            margin-bottom: 20px; font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 1px; border: 1px solid transparent;
         }
 
-        // ==========================================
-        // ACTION: ADMIN SUSPEND (Force Pause User)
-        // ==========================================
-        if (action === 'admin_suspend') {
-            const session = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
-            
-            if (session && session.status === 'playing' && session.last_play_time) {
-                const startTime = new Date(session.last_play_time + 'Z').getTime(); 
-                const minutesPlayed = Math.floor((Date.now() - startTime) / 60000);
-                const newTotalUsed = session.minutes_used + minutesPlayed;
-
-                await env.DB.prepare(
-                    "UPDATE wifi_sessions SET status = 'paused', minutes_used = ? WHERE client_mac = ?"
-                ).bind(newTotalUsed, mac).run();
-                
-                // TODO: Hit Omada API here to force Unauthorize the MAC
-            }
-            return Response.json({ success: true });
+        .status-playing { background: rgba(57, 255, 20, 0.1); color: var(--success); border-color: var(--success); box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
+        .status-paused { background: rgba(255, 0, 60, 0.1); color: var(--warning); border-color: var(--warning); box-shadow: 0 0 10px rgba(255, 0, 60, 0.2); }
+        
+        .btn-action {
+            width: 100%; padding: 15px; border: none; border-radius: 2px; font-size: 1.2rem; font-weight: 700;
+            font-family: 'Orbitron', sans-serif; color: var(--dark); cursor: pointer; margin-bottom: 15px; text-transform: uppercase;
+            letter-spacing: 2px; transition: all 0.2s ease; position: relative; z-index: 1;
         }
+        .btn-action::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: inherit; z-index: -1; transition: transform 0.2s ease; }
+        .btn-action:hover::before { transform: scale(1.02); }
+        .btn-action:active { transform: scale(0.98); }
 
-        // ==========================================
-        // ACTION: CHECK STATUS (Polled every 3 secs)
-        // ==========================================
-        if (action === 'status') {
-            const session = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
+        .btn-play { background: var(--success); box-shadow: 0 0 15px rgba(57, 255, 20, 0.5); }
+        .btn-pause { background: var(--warning); color: white; box-shadow: 0 0 15px rgba(255, 0, 60, 0.5); }
+        .btn-buy-more { background: transparent; color: var(--primary); border: 2px solid var(--primary); box-shadow: 0 0 10px var(--primary-glow) inset; }
+        .btn-buy-more:hover { background: rgba(0, 240, 255, 0.1); box-shadow: 0 0 15px var(--primary-glow); }
 
-            if (session && session.total_minutes_bought > session.minutes_used) {
-                return Response.json({ type: 'dashboard', data: session });
-            }
-
-            const queue = await env.DB.prepare("SELECT * FROM digital_queue WHERE client_mac = ?").bind(mac).first();
-
-            if (queue) {
-                let position = 1;
-                if (queue.status === 'waiting') {
-                    const ahead = await env.DB.prepare(
-                        "SELECT COUNT(*) as count FROM digital_queue WHERE status = 'waiting' AND joined_at < ?"
-                    ).bind(queue.joined_at).first();
-                    position = ahead.count + 1;
-                }
-                return Response.json({ type: 'queue', data: queue, position: position });
-            }
-            return Response.json({ type: 'none' });
+        /* Text Input Styling for Forms */
+        .input-field {
+            width: 100%; padding: 15px; margin-bottom: 15px; background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 240, 255, 0.3); color: var(--primary); font-family: 'Rajdhani', sans-serif;
+            font-size: 1.1rem; border-radius: 2px; box-sizing: border-box; transition: 0.2s;
         }
+        .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
+        .input-field::placeholder { color: #505a75; }
 
-        // ==========================================
-        // ACTION: JOIN QUEUE
-        // ==========================================
-        if (action === 'join') {
-            await env.DB.prepare("INSERT OR IGNORE INTO digital_queue (client_mac, status) VALUES (?, 'waiting')").bind(mac).run();
-            return Response.json({ success: true });
-        }
+        .spinner { width: 50px; height: 50px; border: 3px solid rgba(0, 240, 255, 0.1); border-top: 3px solid var(--primary); border-right: 3px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite, pulse-glow 2s infinite; margin: 30px auto; }
+        #queue-message { font-size: 1.1rem; color: #a8b2d1; }
 
-        // ==========================================
-        // ACTION: REQUEST PLAN
-        // ==========================================
-        if (action === 'request') {
-            const plan = url.searchParams.get('plan');
-            const prices = { 
-                '1H_5M': 5, '3H_5M': 10, '10H_5M': 20, '1D_5M': 30, 
-                '3D_10M': 60, '7D_10M': 130, '15D_10M': 250, '30D_10M': 450 
-            };
-            const amount = prices[plan] || 0;
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 5px var(--primary-glow); } 50% { box-shadow: 0 0 20px var(--primary-glow); } }
+        @keyframes glitch-anim { 0% { opacity: 0; transform: translateY(10px) skewX(5deg); filter: hue-rotate(90deg); } 50% { opacity: 0.8; transform: translateY(-5px) skewX(-5deg); filter: hue-rotate(-90deg); } 100% { opacity: 1; transform: translateY(0) skewX(0); filter: hue-rotate(0); } }
+        body::after { content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); z-index: 999; background-size: 100% 2px, 3px 100%; pointer-events: none; }
+    </style>
+</head>
+<body>
 
-            await env.DB.prepare("UPDATE digital_queue SET requested_plan = ?, payment_amount = ? WHERE client_mac = ?").bind(plan, amount, mac).run();
-            return Response.json({ success: true });
-        }
+<div class="container">
+    <div class="brand-header">
+        <h1>JAC'S WIFI</h1>
+        <div class="tagline">>> ELITE GAMING NETWORK <<</div>
+    </div>
 
-        // ==========================================
-        // ACTION: PLAY (Unlock Internet)
-        // ==========================================
-        if (action === 'play') {
-            await env.DB.prepare("UPDATE wifi_sessions SET status = 'playing', last_play_time = CURRENT_TIMESTAMP WHERE client_mac = ?").bind(mac).run();
-            // TODO: Add fetch here to hit Omada API and Authorize MAC
-            return Response.json({ success: true, status: 'playing' });
-        }
+    <div class="mac-display" id="mac-address-label">SYS_ID: UNKNOWN</div>
 
-        // ==========================================
-        // ACTION: PAUSE (Lock Internet & Save Time)
-        // ==========================================
-        if (action === 'pause') {
-            const session = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
-            
-            if (session && session.status === 'playing' && session.last_play_time) {
-                const startTime = new Date(session.last_play_time + 'Z').getTime();
-                const now = Date.now();
-                const minutesPlayed = Math.floor((now - startTime) / 60000);
-                const newTotalUsed = session.minutes_used + minutesPlayed;
+    <!-- SCREEN 1: LOADING & QUEUE -->
+    <div id="screen-queue" class="screen active">
+        <h2 id="queue-title">INITIALIZING...</h2>
+        <div class="spinner" id="queue-spinner"></div>
+        <p id="queue-message">Establishing secure uplink.</p>
+        <button class="btn-action btn-buy-more" id="btn-join-queue" style="display:none;" onclick="showScreen('screen-menu')">ACCESS NETWORK</button>
+    </div>
 
-                await env.DB.prepare("UPDATE wifi_sessions SET status = 'paused', minutes_used = ? WHERE client_mac = ?").bind(newTotalUsed, mac).run();
-                // TODO: Add fetch here to hit Omada API and Unauthorize MAC
-            }
-            return Response.json({ success: true, status: 'paused' });
-        }
+    <!-- SCREEN 2: RATE MENU -->
+    <div id="screen-menu" class="screen">
+        <h2>SELECT PROTOCOL</h2>
+        <p style="font-size: 0.9rem; color: #8892b0;">Transfer credits to system admin upon selection.</p>
+        
+        <div class="tier-header">>> STD. BANDWIDTH [5MBPS]</div>
+        <div class="grid-menu">
+            <button class="btn-rate" onclick="requestPlan('1H_5M', 5)">1 Hour <span class="price">₱5</span></button>
+            <button class="btn-rate" onclick="requestPlan('3H_5M', 10)">3 Hours <span class="price">₱10</span></button>
+            <button class="btn-rate" onclick="requestPlan('10H_5M', 20)">10 Hours <span class="price">₱20</span></button>
+            <button class="btn-rate" onclick="requestPlan('1D_5M', 30)">24 Hours <span class="price">₱30</span></button>
+        </div>
 
-        return Response.json({ error: 'Invalid action' }, { status: 400 });
+        <div class="tier-header vip-header">>> OVERCLOCK [10MBPS]</div>
+        <div class="grid-menu" style="margin-bottom: 20px;">
+            <button class="btn-rate" onclick="requestPlan('3D_10M', 60)">3 Days <span class="price">₱60</span></button>
+            <button class="btn-rate" onclick="requestPlan('7D_10M', 130)">7 Days <span class="price">₱130</span></button>
+            <button class="btn-rate" onclick="requestPlan('15D_10M', 250)">15 Days <span class="price">₱250</span></button>
+            <button class="btn-rate" onclick="requestPlan('30D_10M', 450)">30 Days <span class="price">₱450</span></button>
+        </div>
 
-    } catch (error) {
-        return Response.json({ error: error.message }, { status: 500 });
+        <div class="tier-header credit-header">>> EMERGENCY UPLINK <<</div>
+        <button class="btn-action" style="background: transparent; border: 1px solid var(--warning); color: var(--warning);" onclick="showScreen('screen-credit')">REQUEST 3 HRS CREDIT (₱10)</button>
+    </div>
+
+    <!-- SCREEN 3: CREDIT FORM -->
+    <div id="screen-credit" class="screen">
+        <h2 style="color: var(--warning); text-shadow: 0 0 10px rgba(255, 0, 60, 0.5);">CREDIT AUTH</h2>
+        <p style="color: #8892b0; font-size: 0.9rem; margin-bottom: 20px;">Admin unavailable? Enter details to activate a 3-hour emergency uplink. Pay ₱10 later.</p>
+        
+        <input type="text" id="credit-name" class="input-field" placeholder="Full Name (Required)">
+        <input type="text" id="credit-address" class="input-field" placeholder="Specific Address (Required)">
+        <p id="credit-error" style="color: var(--warning); font-size: 0.9rem; display: none; font-weight: bold;"></p>
+        
+        <button class="btn-action" style="background: var(--warning); color: white;" onclick="submitCredit()">ACTIVATE UPLINK</button>
+        <button class="btn-action btn-buy-more" onclick="showScreen('screen-menu')">CANCEL</button>
+    </div>
+
+    <!-- SCREEN 4: DASHBOARD (PLAY/PAUSE) -->
+    <div id="screen-dashboard" class="screen">
+        <h2>UPLINK STATUS</h2>
+        <div id="status-badge" class="status-badge status-paused">OFFLINE</div>
+        
+        <p id="time-label" style="color: #8892b0; margin-bottom: -10px; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; letter-spacing: 2px;">SYS. TIME REMAINING</p>
+        <div class="time-display" id="time-remaining">00:00:00</div>
+
+        <button class="btn-action btn-play" id="btn-play" onclick="toggleConnection('play')">ENGAGE UPLINK</button>
+        <button class="btn-action btn-pause" id="btn-pause" onclick="toggleConnection('pause')" style="display:none;">SUSPEND UPLINK</button>
+        <button class="btn-action btn-buy-more" onclick="showScreen('screen-menu')" style="margin-top: 15px;">AQUIRE MORE TIME</button>
+    </div>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    let clientMac = urlParams.get('clientMac');
+    
+    if (!clientMac) {
+        clientMac = localStorage.getItem('saved_mac') || 'TEST-MAC-' + Math.floor(Math.random() * 1000);
     }
-}
+    localStorage.setItem('saved_mac', clientMac);
+    document.getElementById('mac-address-label').innerText = 'SYS_ID: ' + clientMac;
+
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function requestPlan(planCode, price) {
+        showScreen('screen-queue');
+        document.getElementById('queue-title').innerText = 'ESTABLISHING...';
+        document.getElementById('queue-spinner').style.display = 'block';
+        document.getElementById('queue-message').innerText = `Requesting protocol ₱${price}...`;
+        
+        fetch(`/api?action=join&mac=${clientMac}`)
+            .then(() => fetch(`/api?action=request&mac=${clientMac}&plan=${planCode}`))
+            .then(() => {
+                document.getElementById('queue-title').innerText = 'AWAITING AUTH';
+                document.getElementById('queue-spinner').style.display = 'none';
+                document.getElementById('queue-message').innerText = `Transfer ₱${price} to network admin.`;
+            });
+    }
+
+    function submitCredit() {
+        const name = document.getElementById('credit-name').value.trim();
+        const address = document.getElementById('credit-address').value.trim();
+        
+        if (!name || !address) {
+            document.getElementById('credit-error').innerText = "Name and Address are strictly required.";
+            document.getElementById('credit-error').style.display = "block";
+            return;
+        }
+        
+        document.getElementById('credit-error').style.display = "none";
+        showScreen('screen-queue');
+        document.getElementById('queue-title').innerText = 'AUTHORIZING...';
+        document.getElementById('queue-spinner').style.display = 'block';
+        document.getElementById('queue-message').innerText = 'Processing emergency credit...';
+        
+        fetch(`/api?action=request_credit&mac=${clientMac}&name=${encodeURIComponent(name)}&address=${encodeURIComponent(address)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    showScreen('screen-credit');
+                    document.getElementById('credit-error').innerText = data.error;
+                    document.getElementById('credit-error').style.display = "block";
+                }
+                // If successful, the background poller will automatically flip them to the dashboard
+            });
+    }
+
+    function toggleConnection(action) {
+        if (action === 'play') {
+            document.getElementById('btn-play').style.display = 'none';
+            document.getElementById('btn-pause').style.display = 'block';
+            document.getElementById('status-badge').className = 'status-badge status-playing';
+            document.getElementById('status-badge').innerText = 'ACTIVE';
+            fetch(`/api?action=play&mac=${clientMac}`);
+        } else {
+            document.getElementById('btn-pause').style.display = 'none';
+            document.getElementById('btn-play').style.display = 'block';
+            document.getElementById('status-badge').className = 'status-badge status-paused';
+            document.getElementById('status-badge').innerText = 'SUSPENDED';
+            fetch(`/api?action=pause&mac=${clientMac}`);
+        }
+    }
+
+    // --- SEPARATE TIMER LOGIC ---
+    let sessionEndTime = null;
+    let cachedSecondsLeft = 0;
+    let isPlaying = false;
+
+    setInterval(() => {
+        let displaySeconds = 0;
+        if (isPlaying && sessionEndTime) {
+            displaySeconds = Math.floor((sessionEndTime - Date.now()) / 1000);
+        } else {
+            displaySeconds = cachedSecondsLeft;
+        }
+
+        if (displaySeconds < 0) displaySeconds = 0;
+
+        const days = Math.floor(displaySeconds / 86400);
+        const hours = Math.floor((displaySeconds % 86400) / 3600);
+        const mins = Math.floor((displaySeconds % 3600) / 60);
+        const secs = displaySeconds % 60;
+
+        const timeLabel = document.getElementById('time-label');
+        const timeDisplay = document.getElementById('time-remaining');
+        if (!timeLabel || !timeDisplay) return;
+
+        if (days > 0) {
+            timeLabel.innerText = "SYS. TIME REMAINING";
+            timeDisplay.style.fontSize = "1.5rem";
+            timeDisplay.innerText = `${days} DAYS, ${hours} HRS and ${mins} MINS`;
+        } else {
+            timeLabel.innerText = "SYS. TIME (HRS : MIN : SEC)";
+            timeDisplay.style.fontSize = "2.8rem";
+            timeDisplay.innerText = String(hours).padStart(2, '0') + ':' + String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+        }
+    }, 1000);
+
+    // 3-Second Background Database Poller
+    setInterval(() => {
+        fetch(`/api?action=status&mac=${clientMac}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.type === 'dashboard') {
+                    showScreen('screen-dashboard');
+                    const session = data.data;
+
+                    if (session.status === 'playing') {
+                        const startTime = new Date(session.last_play_time + 'Z').getTime();
+                        const secondsPlayed = Math.floor((Date.now() - startTime) / 1000);
+                        cachedSecondsLeft = (session.total_minutes_bought * 60) - (session.minutes_used * 60) - secondsPlayed;
+                        sessionEndTime = Date.now() + (cachedSecondsLeft * 1000);
+                        isPlaying = true;
+
+                        document.getElementById('status-badge').className = 'status-badge status-playing';
+                        document.getElementById('status-badge').innerText = 'UPLINK ACTIVE';
+                        document.getElementById('btn-play').style.display = 'none';
+                        document.getElementById('btn-pause').style.display = 'block';
+                    } else {
+                        cachedSecondsLeft = (session.total_minutes_bought * 60) - (session.minutes_used * 60);
+                        isPlaying = false;
+
+                        document.getElementById('status-badge').className = 'status-badge status-paused';
+                        document.getElementById('status-badge').innerText = 'SUSPENDED';
+                        document.getElementById('btn-pause').style.display = 'none';
+                        document.getElementById('btn-play').style.display = 'block';
+                    }
+                } 
+                else if (data.type === 'queue') {
+                    if (!data.data.requested_plan) {
+                        if (!document.getElementById('screen-menu').classList.contains('active') && !document.getElementById('screen-credit').classList.contains('active')) {
+                            showScreen('screen-menu');
+                        }
+                    } else {
+                        if (!document.getElementById('screen-dashboard').classList.contains('active')) {
+                            showScreen('screen-queue');
+                            document.getElementById('queue-title').innerText = 'AWAITING AUTH';
+                            document.getElementById('queue-spinner').style.display = 'none';
+                            document.getElementById('queue-message').innerText = `Queue position: #${data.position}. Awaiting payment confirmation.`;
+                            document.getElementById('btn-join-queue').style.display = 'none';
+                        }
+                    }
+                } 
+                else {
+                    if (!document.getElementById('screen-menu').classList.contains('active') && !document.getElementById('screen-credit').classList.contains('active')) {
+                        showScreen('screen-queue');
+                        document.getElementById('queue-title').innerText = 'SYSTEM READY';
+                        document.getElementById('queue-spinner').style.display = 'none';
+                        document.getElementById('queue-message').innerText = 'Select to view available protocols.';
+                        document.getElementById('btn-join-queue').style.display = 'block';
+                    }
+                }
+            })
+            .catch(err => console.error("API Error:", err));
+    }, 3000);
+</script>
+
+</body>
+</html>
