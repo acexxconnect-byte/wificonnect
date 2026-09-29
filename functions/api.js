@@ -5,7 +5,6 @@ export async function onRequest(context) {
     const action = url.searchParams.get('action');
     const mac = url.searchParams.get('mac');
 
-    // 1. Security Check
     const adminActions = ['admin_list', 'admin_active_list', 'admin_credit_list', 'admin_clear_credit', 'admin_get_settings', 'admin_toggle_credit'];
     if (!mac && !adminActions.includes(action)) {
         return Response.json({ error: 'Missing MAC Address' }, { status: 400 });
@@ -20,7 +19,7 @@ export async function onRequest(context) {
             try {
                 const setting = await env.DB.prepare("SELECT value FROM system_settings WHERE key = 'credit_enabled'").first();
                 if (setting) creditEnabled = setting.value;
-            } catch(e) {} // Failsafe if table doesn't exist yet
+            } catch(e) {} 
             return Response.json({ credit_enabled: creditEnabled });
         }
 
@@ -38,7 +37,7 @@ export async function onRequest(context) {
         }
 
         // ==========================================
-        // ACTION: REQUEST CREDIT
+        // ACTION: REQUEST CREDIT (Requires 3 Purchases)
         // ==========================================
         if (action === 'request_credit') {
             const name = url.searchParams.get('name');
@@ -46,17 +45,25 @@ export async function onRequest(context) {
             const lat = url.searchParams.get('lat') || '';
             const lng = url.searchParams.get('lng') || '';
             
+            // LOYALTY CHECK: Do they have 3 purchases?
+            const existingSession = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
+            const pCount = existingSession ? (existingSession.purchase_count || 0) : 0;
+            
+            if (pCount < 3) {
+                return Response.json({ error: 'ACCESS DENIED: You must purchase a plan at least 3 times to unlock emergency credit.' });
+            }
+
+            // ANTI-ABUSE CHECK: Do they already have a debt?
             const existingDebt = await env.DB.prepare("SELECT * FROM credits_log WHERE client_mac = ?").bind(mac).first();
             if (existingDebt) return Response.json({ error: 'ACCESS DENIED: Unpaid credit balance.' });
 
-            const existingSession = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
+            // Grant the time
             if (existingSession) {
                 await env.DB.prepare("UPDATE wifi_sessions SET total_minutes_bought = total_minutes_bought + 180, status = 'paused' WHERE client_mac = ?").bind(mac).run();
             } else {
-                await env.DB.prepare("INSERT INTO wifi_sessions (client_mac, total_minutes_bought, minutes_used, status) VALUES (?, 180, 0, 'paused')").bind(mac).run();
+                await env.DB.prepare("INSERT INTO wifi_sessions (client_mac, total_minutes_bought, minutes_used, status, purchase_count) VALUES (?, 180, 0, 'paused', 3)").bind(mac).run();
             }
 
-            // Save the exact GPS coordinates alongside the typed address
             await env.DB.prepare("INSERT INTO credits_log (client_mac, customer_name, customer_address, amount_owed, lat, lng) VALUES (?, ?, ?, 10, ?, ?)").bind(mac, name, address, lat, lng).run();
             await env.DB.prepare("DELETE FROM digital_queue WHERE client_mac = ?").bind(mac).run();
 
@@ -77,24 +84,18 @@ export async function onRequest(context) {
             return Response.json({ success: true });
         }
 
-        // ==========================================
-        // ACTION: ADMIN LIST (View Pending Queue)
-        // ==========================================
         if (action === 'admin_list') {
             const { results } = await env.DB.prepare("SELECT * FROM digital_queue WHERE status = 'waiting' AND requested_plan IS NOT NULL ORDER BY joined_at ASC").all();
             return Response.json(results || []);
         }
 
-        // ==========================================
-        // ACTION: ADMIN ACTIVE LIST (View Connected Users)
-        // ==========================================
         if (action === 'admin_active_list') {
             const { results } = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE status = 'playing' ORDER BY last_play_time DESC").all();
             return Response.json(results || []);
         }
         
         // ==========================================
-        // ACTION: ADMIN APPROVE (Grant Time)
+        // ACTION: ADMIN APPROVE (+1 Purchase Count)
         // ==========================================
         if (action === 'admin_approve') {
             const plan = url.searchParams.get('plan');
@@ -102,10 +103,12 @@ export async function onRequest(context) {
             const minutesBought = planMinutes[plan] || 0;
 
             const existingSession = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
+            
+            // Add +1 to their purchase_count history!
             if (existingSession) {
-                await env.DB.prepare("UPDATE wifi_sessions SET total_minutes_bought = total_minutes_bought + ?, status = 'paused' WHERE client_mac = ?").bind(minutesBought, mac).run();
+                await env.DB.prepare("UPDATE wifi_sessions SET total_minutes_bought = total_minutes_bought + ?, status = 'paused', purchase_count = COALESCE(purchase_count, 0) + 1 WHERE client_mac = ?").bind(minutesBought, mac).run();
             } else {
-                await env.DB.prepare("INSERT INTO wifi_sessions (client_mac, total_minutes_bought, minutes_used, status) VALUES (?, ?, 0, 'paused')").bind(mac, minutesBought).run();
+                await env.DB.prepare("INSERT INTO wifi_sessions (client_mac, total_minutes_bought, minutes_used, status, purchase_count) VALUES (?, ?, 0, 'paused', 1)").bind(mac, minutesBought).run();
             }
 
             await env.DB.prepare("DELETE FROM digital_queue WHERE client_mac = ?").bind(mac).run();
@@ -132,7 +135,7 @@ export async function onRequest(context) {
         }
 
         // ==========================================
-        // ACTION: CHECK STATUS (Polled every 3 secs)
+        // ACTION: CHECK STATUS (Sends Eligibility to UI)
         // ==========================================
         if (action === 'status') {
             let creditEnabled = 'false';
@@ -141,9 +144,13 @@ export async function onRequest(context) {
                 if (setting) creditEnabled = setting.value;
             } catch(e) {}
 
-            const session = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
-            if (session && session.total_minutes_bought > session.minutes_used) {
-                return Response.json({ type: 'dashboard', data: session, credit_enabled: creditEnabled });
+            // Check how many times they've bought
+            const sessionAll = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
+            const pCount = sessionAll ? (sessionAll.purchase_count || 0) : 0;
+            const isEligible = pCount >= 3;
+
+            if (sessionAll && sessionAll.total_minutes_bought > sessionAll.minutes_used) {
+                return Response.json({ type: 'dashboard', data: sessionAll, credit_enabled: creditEnabled, eligible: isEligible });
             }
 
             const queue = await env.DB.prepare("SELECT * FROM digital_queue WHERE client_mac = ?").bind(mac).first();
@@ -153,9 +160,9 @@ export async function onRequest(context) {
                     const ahead = await env.DB.prepare("SELECT COUNT(*) as count FROM digital_queue WHERE status = 'waiting' AND joined_at < ?").bind(queue.joined_at).first();
                     position = ahead.count + 1;
                 }
-                return Response.json({ type: 'queue', data: queue, position: position, credit_enabled: creditEnabled });
+                return Response.json({ type: 'queue', data: queue, position: position, credit_enabled: creditEnabled, eligible: isEligible });
             }
-            return Response.json({ type: 'none', credit_enabled: creditEnabled });
+            return Response.json({ type: 'none', credit_enabled: creditEnabled, eligible: isEligible });
         }
 
         // ==========================================
