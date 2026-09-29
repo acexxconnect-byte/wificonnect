@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JAC'S Command Center</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
-    
-    <!-- Leaflet CSS for Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
@@ -34,7 +32,6 @@
         .brand-header h1 { font-family: 'Orbitron', sans-serif; color: #fff; margin: 0; text-shadow: 0 0 10px var(--primary-glow); letter-spacing: 2px; }
         .brand-header .tagline { color: var(--primary); font-weight: 700; letter-spacing: 2px; font-size: 0.9rem; }
 
-        /* TABS */
         .tab-bar { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; }
         .tab {
             flex: 1; background: transparent; color: var(--primary); border: 1px solid var(--primary);
@@ -45,7 +42,6 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
 
-        /* CARDS */
         .card {
             background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(0, 240, 255, 0.2); border-left: 4px solid var(--primary);
             padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
@@ -57,7 +53,6 @@
         .plan { color: #8892b0; font-size: 0.9rem; margin-top: 5px; }
         .time-used { color: var(--success); font-weight: bold; }
 
-        /* BUTTONS */
         .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
         .btn { padding: 8px 15px; border: none; font-family: 'Orbitron', sans-serif; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; border-radius: 2px; transition: 0.2s; }
         .btn-approve { background: var(--success); color: #000; box-shadow: 0 0 10px rgba(57, 255, 20, 0.3); }
@@ -68,14 +63,9 @@
 
         .empty-state { text-align: center; color: #8892b0; padding: 40px 0; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; }
 
-        /* MAP & SETTINGS */
         #credit-map { height: 250px; width: 100%; border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 4px; margin-bottom: 20px; display: none; z-index: 1; }
         
-        /* MAGIC CSS FILTER: Turns free standard map into a dark cyber map! */
-        .leaflet-layer,
-        .leaflet-control-zoom-in,
-        .leaflet-control-zoom-out,
-        .leaflet-control-attribution {
+        .leaflet-layer, .leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-control-attribution {
             filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
         }
 
@@ -92,6 +82,9 @@
         <div class="brand-header">
             <h1>JAC'S ADMIN</h1>
             <div class="tagline">>> NETWORK COMMAND CENTER <<</div>
+            
+            <!-- MASTER AWAY MODE SWITCH -->
+            <button id="btn-away-mode" class="btn" style="margin-top: 15px; background: transparent; border: 1px solid var(--primary); color: var(--primary);" onclick="toggleAwayMode()">AWAY MODE (CREDITS): OFF</button>
         </div>
 
         <div class="tab-bar">
@@ -113,7 +106,6 @@
 
         <!-- TAB 3: CREDITS LOG & MAP -->
         <div id="tab-credits" class="tab-content">
-            <!-- Hidden Map Container -->
             <div id="credit-map"></div>
             <div id="credits-list"><div class="empty-state">SCANNING DATABASE...</div></div>
         </div>
@@ -139,6 +131,33 @@
         let map = null;
         let currentMarker = null;
 
+        function loadSettings() {
+            fetch('/api?action=admin_get_settings')
+                .then(res => res.json())
+                .then(data => {
+                    const btn = document.getElementById('btn-away-mode');
+                    if (data.credit_enabled === 'true') {
+                        btn.style.background = 'var(--warning)';
+                        btn.style.color = '#fff';
+                        btn.style.borderColor = 'var(--warning)';
+                        btn.innerText = 'AWAY MODE (CREDITS): ON';
+                    } else {
+                        btn.style.background = 'transparent';
+                        btn.style.color = 'var(--primary)';
+                        btn.style.borderColor = 'var(--primary)';
+                        btn.innerText = 'AWAY MODE (CREDITS): OFF';
+                    }
+                });
+        }
+        
+        function toggleAwayMode() {
+            const btn = document.getElementById('btn-away-mode');
+            btn.innerText = "UPDATING...";
+            fetch('/api?action=admin_toggle_credit')
+                .then(res => res.json())
+                .then(() => loadSettings());
+        }
+
         function switchTab(tabId) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -158,6 +177,7 @@
         }
 
         function fetchData() {
+            loadSettings();
             if (currentTab === 'queue') loadQueue();
             if (currentTab === 'active') loadActiveClients();
             if (currentTab === 'credits') loadCredits();
@@ -220,13 +240,12 @@
                     const list = document.getElementById('credits-list');
                     if (data.error) return list.innerHTML = `<div class="empty-state" style="color: red;">SYS ERR: ${data.error}</div>`;
                     if (data.length === 0) {
-                        document.getElementById('credit-map').style.display = 'none'; // Hide map if no credits
+                        document.getElementById('credit-map').style.display = 'none';
                         return list.innerHTML = '<div class="empty-state" style="color: var(--success);">ALL CREDITS SETTLED</div>';
                     }
                     
                     list.innerHTML = '';
                     data.forEach(user => {
-                        // Pass exact address strings safely to the locate function
                         const safeAddress = user.customer_address.replace(/'/g, "\\'");
                         const safeName = user.customer_name.replace(/'/g, "\\'");
                         
@@ -246,26 +265,18 @@
                 });
         }
 
-        // Initialize and Search Map Coordinates
         function locateOnMap(address, name) {
             const mapDiv = document.getElementById('credit-map');
             mapDiv.style.display = 'block';
             
-            // Initialize map centered on Dipolog City if not already created
             if (!map) {
                 map = L.map('credit-map').setView([8.5866, 123.3408], 13);
-                
-                // Use standard OpenStreetMap tiles (100% Free, NO API Key)
                 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OpenStreetMap contributors',
-                    maxZoom: 19
+                    attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
                 }).addTo(map);
             }
             
-            // Fix map sizing glitch inside hidden tabs
             setTimeout(() => { map.invalidateSize(); }, 300);
-
-            // Append Dipolog City to the search query for high local accuracy
             const searchQuery = encodeURIComponent(address + ", Dipolog City, Zamboanga del Norte, Philippines");
             
             fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}`)
@@ -274,16 +285,9 @@
                     if (data && data.length > 0) {
                         const lat = data[0].lat;
                         const lon = data[0].lon;
-                        
                         map.flyTo([lat, lon], 16);
-                        
                         if (currentMarker) map.removeLayer(currentMarker);
-                        
-                        currentMarker = L.marker([lat, lon]).addTo(map)
-                            .bindPopup(`<strong style="color:#000;">${name}</strong><br><span style="color:#333;">${address}</span>`)
-                            .openPopup();
-                            
-                        // Scroll up to see the map
+                        currentMarker = L.marker([lat, lon]).addTo(map).bindPopup(`<strong style="color:#000;">${name}</strong><br><span style="color:#333;">${address}</span>`).openPopup();
                         mapDiv.scrollIntoView({ behavior: 'smooth' });
                     } else {
                         alert("The map couldn't pinpoint this exact text address automatically. \n\nTip: Tell your customers to enter nearby landmarks (like a school or church) next to their address.");
