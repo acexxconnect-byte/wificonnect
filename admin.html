@@ -233,7 +233,7 @@
                 });
         }
 
-        function loadCredits() {
+       function loadCredits() {
             fetch('/api?action=admin_credit_list')
                 .then(res => res.json())
                 .then(data => {
@@ -251,11 +251,17 @@
                         const lat = user.lat || '';
                         const lng = user.lng || '';
                         
+                        // Format the coordinates to look clean
+                        let gpsDisplay = (lat && lng && lat !== 'null' && lat !== '') 
+                            ? `GPS: ${parseFloat(lat).toFixed(5)}, ${parseFloat(lng).toFixed(5)}` 
+                            : 'GPS: Not acquired';
+                        
                         list.innerHTML += `
                             <div class="card credit-client">
                                 <div style="flex-grow: 1;">
                                     <div class="mac" style="color: var(--warning);">${user.customer_name}</div>
                                     <div class="plan" style="color: var(--light);">Loc: ${user.customer_address}</div>
+                                    <div class="plan" style="color: var(--primary); font-family: 'Orbitron', monospace; font-size: 0.85rem;">${gpsDisplay}</div>
                                     <div class="plan">SYS_ID: ${user.client_mac} | Owed: <strong style="color:var(--danger)">₱${user.amount_owed}</strong></div>
                                 </div>
                                 <div class="btn-group">
@@ -266,7 +272,6 @@
                     });
                 });
         }
-
         // Smart Mapping: Uses GPS if available, falls back to text search if missing!
         function locateOnMap(name, typedAddress, lat, lng) {
             const mapDiv = document.getElementById('credit-map');
