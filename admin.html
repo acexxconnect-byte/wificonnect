@@ -47,6 +47,7 @@
             padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;
         }
         .card.active-client { border-left-color: var(--success); }
+        .card.credit-client { border-left-color: var(--warning); }
         
         .mac { font-family: 'Orbitron', monospace; color: var(--primary); font-size: 1.1rem; }
         .plan { color: #8892b0; font-size: 0.9rem; margin-top: 5px; }
@@ -81,6 +82,7 @@
         <div class="tab-bar">
             <div class="tab active" onclick="switchTab('queue')">PENDING (<span id="queue-count">0</span>)</div>
             <div class="tab" onclick="switchTab('active')">ACTIVE UPLINKS</div>
+            <div class="tab" style="border-color: var(--warning); color: var(--warning);" onclick="switchTab('credits')">UNPAID CREDITS</div>
             <div class="tab" onclick="switchTab('settings')">SYS SETTINGS</div>
         </div>
 
@@ -94,7 +96,12 @@
             <div id="active-list"><div class="empty-state">SCANNING NETWORK...</div></div>
         </div>
 
-        <!-- TAB 3: SYSTEM SETTINGS -->
+        <!-- TAB 3: CREDITS LOG -->
+        <div id="tab-credits" class="tab-content">
+            <div id="credits-list"><div class="empty-state">SCANNING DATABASE...</div></div>
+        </div>
+
+        <!-- TAB 4: SYSTEM SETTINGS -->
         <div id="tab-settings" class="tab-content">
             <div class="settings-box">
                 <h3>SECURITY: BLOCK ADULT SITES</h3>
@@ -103,17 +110,6 @@
                     <li>Primary DNS: <span class="code-snippet">208.67.222.123</span></li>
                     <li>Secondary DNS: <span class="code-snippet">208.67.220.123</span></li>
                 </ul>
-            </div>
-            <div class="settings-box">
-                <h3>MANAGE PRICING & RATES</h3>
-                <p>For security, rates are hardcoded in the backend to prevent users from altering prices via their browser. To update rates, edit your <strong>functions/api.js</strong> file in GitHub:</p>
-                <p>Look for this line in <span class="code-snippet">action === 'request'</span>:</p>
-                <p style="background:#000; padding:10px; border-left: 2px solid var(--primary); font-family:monospace; font-size:0.8rem; color:#a8b2d1;">
-                    const prices = { <br>
-                    &nbsp;&nbsp;'1H_5M': 5, '3H_5M': 10, '10H_5M': 20, '1D_5M': 30,<br>
-                    &nbsp;&nbsp;'3D_10M': 60, '7D_10M': 130, '15D_10M': 250, '30D_10M': 450 <br>
-                    };
-                </p>
             </div>
         </div>
     </div>
@@ -125,6 +121,16 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             event.target.classList.add('active');
+            
+            // Reapply warning colors for credit tab dynamically
+            document.querySelectorAll('.tab').forEach(t => {
+                if(t.innerText === 'UNPAID CREDITS' && !t.classList.contains('active')) {
+                    t.style.background = 'transparent'; t.style.color = 'var(--warning)';
+                } else if(t.innerText === 'UNPAID CREDITS' && t.classList.contains('active')) {
+                    t.style.background = 'var(--warning)'; t.style.color = '#fff';
+                }
+            });
+
             document.getElementById('tab-' + tabId).classList.add('active');
             currentTab = tabId;
             fetchData();
@@ -133,6 +139,7 @@
         function fetchData() {
             if (currentTab === 'queue') loadQueue();
             if (currentTab === 'active') loadActiveClients();
+            if (currentTab === 'credits') loadCredits();
         }
 
         function loadQueue() {
@@ -185,11 +192,35 @@
                 });
         }
 
+        function loadCredits() {
+            fetch('/api?action=admin_credit_list')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('credits-list');
+                    if (data.error) return list.innerHTML = `<div class="empty-state" style="color: red;">SYS ERR: ${data.error}</div>`;
+                    if (data.length === 0) return list.innerHTML = '<div class="empty-state" style="color: var(--success);">ALL CREDITS SETTLED</div>';
+                    
+                    list.innerHTML = '';
+                    data.forEach(user => {
+                        list.innerHTML += `
+                            <div class="card credit-client">
+                                <div>
+                                    <div class="mac" style="color: var(--warning);">${user.customer_name}</div>
+                                    <div class="plan" style="color: var(--light);">Loc: ${user.customer_address}</div>
+                                    <div class="plan">SYS_ID: ${user.client_mac} | Owed: <strong style="color:var(--danger)">₱${user.amount_owed}</strong></div>
+                                </div>
+                                <button class="btn" style="background: var(--success); color: #000;" onclick="clearCredit(${user.id}, this)">MARK PAID</button>
+                            </div>`;
+                    });
+                });
+        }
+
         function approveUser(mac, plan, btn) { btn.innerText = "WAIT..."; fetch(`/api?action=admin_approve&mac=${mac}&plan=${plan}`).then(() => fetchData()); }
         function declineUser(mac, btn) { btn.innerText = "WAIT..."; fetch(`/api?action=admin_decline&mac=${mac}`).then(() => fetchData()); }
         function suspendUser(mac, btn) { btn.innerText = "WAIT..."; fetch(`/api?action=admin_suspend&mac=${mac}`).then(() => fetchData()); }
+        function clearCredit(id, btn) { btn.innerText = "WAIT..."; fetch(`/api?action=admin_clear_credit&id=${id}`).then(() => fetchData()); }
 
-        // Background poller every 3 seconds for the active tab
+        // Background poller every 3 seconds
         setInterval(fetchData, 3000);
         fetchData();
     </script>
