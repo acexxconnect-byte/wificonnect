@@ -43,6 +43,8 @@ export async function onRequest(context) {
         if (action === 'request_credit') {
             const name = url.searchParams.get('name');
             const address = url.searchParams.get('address');
+            const lat = url.searchParams.get('lat') || '';
+            const lng = url.searchParams.get('lng') || '';
             
             const existingDebt = await env.DB.prepare("SELECT * FROM credits_log WHERE client_mac = ?").bind(mac).first();
             if (existingDebt) return Response.json({ error: 'ACCESS DENIED: Unpaid credit balance.' });
@@ -54,7 +56,8 @@ export async function onRequest(context) {
                 await env.DB.prepare("INSERT INTO wifi_sessions (client_mac, total_minutes_bought, minutes_used, status) VALUES (?, 180, 0, 'paused')").bind(mac).run();
             }
 
-            await env.DB.prepare("INSERT INTO credits_log (client_mac, customer_name, customer_address, amount_owed) VALUES (?, ?, ?, 10)").bind(mac, name, address).run();
+            // Save the exact GPS coordinates alongside the typed address
+            await env.DB.prepare("INSERT INTO credits_log (client_mac, customer_name, customer_address, amount_owed, lat, lng) VALUES (?, ?, ?, 10, ?, ?)").bind(mac, name, address, lat, lng).run();
             await env.DB.prepare("DELETE FROM digital_queue WHERE client_mac = ?").bind(mac).run();
 
             return Response.json({ success: true });
