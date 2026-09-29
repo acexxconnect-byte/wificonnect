@@ -11,9 +11,6 @@ export async function onRequest(context) {
     }
 
     try {
-        // ==========================================
-        // ACTION: AWAY MODE SETTINGS
-        // ==========================================
         if (action === 'admin_get_settings') {
             let creditEnabled = 'false';
             try {
@@ -32,32 +29,22 @@ export async function onRequest(context) {
             
             const newVal = current === 'true' ? 'false' : 'true';
             await env.DB.prepare("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('credit_enabled', ?)").bind(newVal).run();
-            
             return Response.json({ success: true, credit_enabled: newVal });
         }
 
-        // ==========================================
-        // ACTION: REQUEST CREDIT (Requires 3 Purchases)
-        // ==========================================
         if (action === 'request_credit') {
             const name = url.searchParams.get('name');
             const address = url.searchParams.get('address');
             const lat = url.searchParams.get('lat') || '';
             const lng = url.searchParams.get('lng') || '';
             
-            // LOYALTY CHECK: Do they have 3 purchases?
             const existingSession = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
             const pCount = existingSession ? (existingSession.purchase_count || 0) : 0;
-            
-            if (pCount < 3) {
-                return Response.json({ error: 'ACCESS DENIED: You must purchase a plan at least 3 times to unlock emergency credit.' });
-            }
+            if (pCount < 3) return Response.json({ error: 'ACCESS DENIED: You must purchase a plan at least 3 times to unlock emergency credit.' });
 
-            // ANTI-ABUSE CHECK: Do they already have a debt?
             const existingDebt = await env.DB.prepare("SELECT * FROM credits_log WHERE client_mac = ?").bind(mac).first();
             if (existingDebt) return Response.json({ error: 'ACCESS DENIED: Unpaid credit balance.' });
 
-            // Grant the time
             if (existingSession) {
                 await env.DB.prepare("UPDATE wifi_sessions SET total_minutes_bought = total_minutes_bought + 180, status = 'paused' WHERE client_mac = ?").bind(mac).run();
             } else {
@@ -66,13 +53,9 @@ export async function onRequest(context) {
 
             await env.DB.prepare("INSERT INTO credits_log (client_mac, customer_name, customer_address, amount_owed, lat, lng) VALUES (?, ?, ?, 10, ?, ?)").bind(mac, name, address, lat, lng).run();
             await env.DB.prepare("DELETE FROM digital_queue WHERE client_mac = ?").bind(mac).run();
-
             return Response.json({ success: true });
         }
 
-        // ==========================================
-        // ACTION: ADMIN CREDIT LIST & CLEAR
-        // ==========================================
         if (action === 'admin_credit_list') {
             const { results } = await env.DB.prepare("SELECT * FROM credits_log ORDER BY id DESC").all();
             return Response.json(results || []);
@@ -94,9 +77,6 @@ export async function onRequest(context) {
             return Response.json(results || []);
         }
         
-        // ==========================================
-        // ACTION: ADMIN APPROVE (+1 Purchase Count)
-        // ==========================================
         if (action === 'admin_approve') {
             const plan = url.searchParams.get('plan');
             const planMinutes = { '1H_5M': 60, '3H_5M': 180, '10H_5M': 600, '1D_5M': 1440, '3D_10M': 4320, '7D_10M': 10080, '15D_10M': 21600, '30D_10M': 43200 };
@@ -104,7 +84,6 @@ export async function onRequest(context) {
 
             const existingSession = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
             
-            // Add +1 to their purchase_count history!
             if (existingSession) {
                 await env.DB.prepare("UPDATE wifi_sessions SET total_minutes_bought = total_minutes_bought + ?, status = 'paused', purchase_count = COALESCE(purchase_count, 0) + 1 WHERE client_mac = ?").bind(minutesBought, mac).run();
             } else {
@@ -115,9 +94,6 @@ export async function onRequest(context) {
             return Response.json({ success: true });
         }
 
-        // ==========================================
-        // ACTION: ADMIN DECLINE & SUSPEND
-        // ==========================================
         if (action === 'admin_decline') {
             await env.DB.prepare("DELETE FROM digital_queue WHERE client_mac = ?").bind(mac).run();
             return Response.json({ success: true });
@@ -135,7 +111,7 @@ export async function onRequest(context) {
         }
 
         // ==========================================
-        // ACTION: CHECK STATUS (Sends Eligibility to UI)
+        // ACTION: CHECK STATUS (FIXED LOGIC)
         // ==========================================
         if (action === 'status') {
             let creditEnabled = 'false';
@@ -144,15 +120,11 @@ export async function onRequest(context) {
                 if (setting) creditEnabled = setting.value;
             } catch(e) {}
 
-            // Check how many times they've bought
             const sessionAll = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
             const pCount = sessionAll ? (sessionAll.purchase_count || 0) : 0;
             const isEligible = pCount >= 3;
 
-            if (sessionAll && sessionAll.total_minutes_bought > sessionAll.minutes_used) {
-                return Response.json({ type: 'dashboard', data: sessionAll, credit_enabled: creditEnabled, eligible: isEligible });
-            }
-
+            // CRITICAL FIX: Check the Queue FIRST, so users stacking time see the "Awaiting Auth" screen
             const queue = await env.DB.prepare("SELECT * FROM digital_queue WHERE client_mac = ?").bind(mac).first();
             if (queue) {
                 let position = 1;
@@ -162,12 +134,15 @@ export async function onRequest(context) {
                 }
                 return Response.json({ type: 'queue', data: queue, position: position, credit_enabled: creditEnabled, eligible: isEligible });
             }
+
+            // ONLY check dashboard if they are NOT in the queue
+            if (sessionAll && sessionAll.total_minutes_bought > sessionAll.minutes_used) {
+                return Response.json({ type: 'dashboard', data: sessionAll, credit_enabled: creditEnabled, eligible: isEligible });
+            }
+
             return Response.json({ type: 'none', credit_enabled: creditEnabled, eligible: isEligible });
         }
 
-        // ==========================================
-        // ACTION: JOIN QUEUE & REQUEST PLAN
-        // ==========================================
         if (action === 'join') {
             await env.DB.prepare("INSERT OR IGNORE INTO digital_queue (client_mac, status) VALUES (?, 'waiting')").bind(mac).run();
             return Response.json({ success: true });
@@ -180,9 +155,6 @@ export async function onRequest(context) {
             return Response.json({ success: true });
         }
 
-        // ==========================================
-        // ACTION: PLAY & PAUSE
-        // ==========================================
         if (action === 'play') {
             await env.DB.prepare("UPDATE wifi_sessions SET status = 'playing', last_play_time = CURRENT_TIMESTAMP WHERE client_mac = ?").bind(mac).run();
             return Response.json({ success: true, status: 'playing' });
