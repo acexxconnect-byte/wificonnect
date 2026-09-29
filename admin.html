@@ -70,6 +70,15 @@
 
         /* MAP & SETTINGS */
         #credit-map { height: 250px; width: 100%; border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 4px; margin-bottom: 20px; display: none; z-index: 1; }
+        
+        /* MAGIC CSS FILTER: Turns free standard map into a dark cyber map! */
+        .leaflet-layer,
+        .leaflet-control-zoom-in,
+        .leaflet-control-zoom-out,
+        .leaflet-control-attribution {
+            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+        }
+
         .settings-box { border: 1px dashed rgba(0, 240, 255, 0.3); padding: 15px; margin-bottom: 15px; background: rgba(0,0,0,0.3); }
         .settings-box h3 { color: var(--primary); font-family: 'Orbitron', sans-serif; margin-top: 0; }
         .settings-box p, .settings-box li { color: #e0e0e0; font-size: 0.95rem; line-height: 1.5; }
@@ -246,11 +255,10 @@
             if (!map) {
                 map = L.map('credit-map').setView([8.5866, 123.3408], 13);
                 
-                // Add Dark Mode CartoDB tiles to match your gaming aesthetic
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                    attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-                    subdomains: 'abcd',
-                    maxZoom: 20
+                // Use standard OpenStreetMap tiles (100% Free, NO API Key)
+                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors',
+                    maxZoom: 19
                 }).addTo(map);
             }
             
