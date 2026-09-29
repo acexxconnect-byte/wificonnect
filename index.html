@@ -8,10 +8,18 @@
     
     <style>
         :root {
-            --primary: #00f0ff; --primary-glow: rgba(0, 240, 255, 0.5);
-            --success: #39ff14; --warning: #ff003c; --danger: #ff003c;
-            --dark: #0a0a0c; --panel-bg: #111116; --light: #e0e0e0;
-            --grid-color: rgba(0, 240, 255, 0.1);
+            /* Updated to match the new Esports Logo Colorway */
+            --primary: #00d2ff; /* Neon Cyan from logo */
+            --primary-glow: rgba(0, 210, 255, 0.5);
+            --secondary: #ff8c00; /* Vibrant Orange from logo */
+            --secondary-glow: rgba(255, 140, 0, 0.5);
+            --success: #ff8c00; /* Changed Active/Play states to Orange to match theme */
+            --warning: #ff003c; 
+            --danger: #ff003c;
+            --dark: #0a0a0c; 
+            --panel-bg: #111116; 
+            --light: #e0e0e0;
+            --grid-color: rgba(0, 210, 255, 0.1);
         }
 
         body {
@@ -23,7 +31,7 @@
 
         .container {
             background: var(--panel-bg); width: 100%; max-width: 400px; border-radius: 4px;
-            border: 1px solid rgba(0, 240, 255, 0.2); box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 10px var(--primary-glow);
+            border: 1px solid rgba(0, 210, 255, 0.2); box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 10px var(--primary-glow);
             padding: 30px 24px; text-align: center; position: relative; overflow: hidden;
         }
 
@@ -33,9 +41,8 @@
         .container::before { top: 0; left: 0; border-right: none; border-bottom: none; }
         .container::after { bottom: 0; right: 0; border-left: none; border-top: none; }
 
-        .brand-header { margin-bottom: 25px; border-bottom: 1px solid rgba(0, 240, 255, 0.2); padding-bottom: 15px; }
-        .brand-header h1 { font-family: 'Orbitron', sans-serif; color: #fff; font-size: 2.2rem; margin: 0 0 5px 0; text-shadow: 0 0 10px var(--primary-glow), 0 0 20px var(--primary); letter-spacing: 3px; }
-        .brand-header .tagline { font-family: 'Rajdhani', sans-serif; color: var(--primary); font-size: 0.95rem; font-weight: 700; letter-spacing: 2px; }
+        .brand-header { margin-bottom: 20px; border-bottom: 1px solid rgba(0, 210, 255, 0.2); padding-bottom: 15px; }
+        .brand-logo { width: 100%; max-width: 260px; height: auto; margin: 0 auto; display: block; filter: drop-shadow(0 0 15px var(--primary-glow)); }
 
         .screen { display: none; animation: glitch-anim 0.3s ease-out forwards; }
         .screen.active { display: block; }
@@ -52,27 +59,29 @@
             margin: 20px 0 15px 0; font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; font-family: 'Orbitron', sans-serif; text-align: left;
         }
         
-        .vip-header { color: #ffd700; border-left-color: #ffd700; text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+        /* Updated VIP to Orange */
+        .vip-header { color: var(--secondary); border-left-color: var(--secondary); text-shadow: 0 0 5px var(--secondary-glow); }
         .credit-header { color: var(--warning); border-left-color: var(--warning); text-shadow: 0 0 5px rgba(255, 0, 60, 0.5); }
 
         .grid-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
         .btn-rate {
-            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 240, 255, 0.3); color: var(--light);
+            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 210, 255, 0.3); color: var(--light);
             padding: 15px 5px; border-radius: 2px; cursor: pointer; font-weight: 700; font-size: 1.1rem;
             font-family: 'Rajdhani', sans-serif; transition: all 0.2s ease; position: relative; overflow: hidden; text-transform: uppercase;
         }
-        .btn-rate:hover { border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); background: rgba(0, 240, 255, 0.05); transform: translateY(-2px); }
+        .btn-rate:hover { border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); background: rgba(0, 210, 255, 0.05); transform: translateY(-2px); }
         .btn-rate:active { background: var(--primary); color: var(--dark); transform: translateY(0); }
 
         .price { color: var(--primary); font-size: 1.3rem; display: block; margin-top: 5px; font-family: 'Orbitron', sans-serif; font-weight: 900; }
-        .vip-header + .grid-menu .price { color: #ffd700; }
-        .vip-header + .grid-menu .btn-rate:hover { border-color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); }
+        .vip-header + .grid-menu .price { color: var(--secondary); }
+        .vip-header + .grid-menu .btn-rate:hover { border-color: var(--secondary); box-shadow: 0 0 15px var(--secondary-glow); background: rgba(255, 140, 0, 0.05); }
+        .vip-header + .grid-menu .btn-rate:active { background: var(--secondary); color: var(--dark); }
 
         .time-display {
             font-size: 2.8rem; font-family: 'Orbitron', sans-serif; font-weight: 900; color: var(--primary);
             margin: 20px 0; text-shadow: 0 0 15px var(--primary-glow); background: rgba(0,0,0,0.4);
-            border: 1px solid rgba(0, 240, 255, 0.2); padding: 10px; border-radius: 4px; letter-spacing: 2px; transition: font-size 0.3s ease;
+            border: 1px solid rgba(0, 210, 255, 0.2); padding: 10px; border-radius: 4px; letter-spacing: 2px; transition: font-size 0.3s ease;
         }
 
         .status-badge {
@@ -80,7 +89,8 @@
             margin-bottom: 20px; font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 1px; border: 1px solid transparent;
         }
 
-        .status-playing { background: rgba(57, 255, 20, 0.1); color: var(--success); border-color: var(--success); box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
+        /* Updated Playing Status to Orange */
+        .status-playing { background: rgba(255, 140, 0, 0.1); color: var(--success); border-color: var(--success); box-shadow: 0 0 10px var(--secondary-glow); }
         .status-paused { background: rgba(255, 0, 60, 0.1); color: var(--warning); border-color: var(--warning); box-shadow: 0 0 10px rgba(255, 0, 60, 0.2); }
         
         .btn-action {
@@ -92,34 +102,35 @@
         .btn-action:hover::before { transform: scale(1.02); }
         .btn-action:active { transform: scale(0.98); }
 
-        .btn-play { background: var(--success); box-shadow: 0 0 15px rgba(57, 255, 20, 0.5); }
+        /* Updated Play Button to Orange */
+        .btn-play { background: var(--success); box-shadow: 0 0 15px var(--secondary-glow); }
         .btn-pause { background: var(--warning); color: white; box-shadow: 0 0 15px rgba(255, 0, 60, 0.5); }
         .btn-buy-more { background: transparent; color: var(--primary); border: 2px solid var(--primary); box-shadow: 0 0 10px var(--primary-glow) inset; }
-        .btn-buy-more:hover { background: rgba(0, 240, 255, 0.1); box-shadow: 0 0 15px var(--primary-glow); }
+        .btn-buy-more:hover { background: rgba(0, 210, 255, 0.1); box-shadow: 0 0 15px var(--primary-glow); }
 
         .input-field {
             width: 100%; padding: 15px; margin-bottom: 15px; background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(0, 240, 255, 0.3); color: var(--primary); font-family: 'Rajdhani', sans-serif;
+            border: 1px solid rgba(0, 210, 255, 0.3); color: var(--primary); font-family: 'Rajdhani', sans-serif;
             font-size: 1.1rem; border-radius: 2px; box-sizing: border-box; transition: 0.2s;
         }
         .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
         .input-field::placeholder { color: #505a75; }
 
-        .spinner { width: 50px; height: 50px; border: 3px solid rgba(0, 240, 255, 0.1); border-top: 3px solid var(--primary); border-right: 3px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite, pulse-glow 2s infinite; margin: 30px auto; }
+        .spinner { width: 50px; height: 50px; border: 3px solid rgba(0, 210, 255, 0.1); border-top: 3px solid var(--primary); border-right: 3px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite, pulse-glow 2s infinite; margin: 30px auto; }
         #queue-message { font-size: 1.1rem; color: #a8b2d1; }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 5px var(--primary-glow); } 50% { box-shadow: 0 0 20px var(--primary-glow); } }
         @keyframes glitch-anim { 0% { opacity: 0; transform: translateY(10px) skewX(5deg); filter: hue-rotate(90deg); } 50% { opacity: 0.8; transform: translateY(-5px) skewX(-5deg); filter: hue-rotate(-90deg); } 100% { opacity: 1; transform: translateY(0) skewX(0); filter: hue-rotate(0); } }
-        body::after { content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); z-index: 999; background-size: 100% 2px, 3px 100%; pointer-events: none; }
+        body::after { content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 140, 0, 0.04), rgba(0, 210, 255, 0.04), rgba(0, 0, 0, 0)); z-index: 999; background-size: 100% 2px, 3px 100%; pointer-events: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="brand-header">
-        <h1>JAC'S WIFI</h1>
-        <div class="tagline">>> ELITE GAMING NETWORK <<</div>
+        <!-- New Image Tag pointing to your uploaded logo -->
+        <img src="logo.png" alt="JAC'S WIFI - MAX SPEED. NO LAG." class="brand-logo">
     </div>
 
     <div class="mac-display" id="mac-address-label">SYS_ID: UNKNOWN</div>
@@ -233,7 +244,6 @@
         document.getElementById('queue-spinner').style.display = 'block';
         document.getElementById('queue-message').innerText = 'Please allow location access on your device to verify credit request.';
         
-        // Request exact device coordinates
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
@@ -255,7 +265,6 @@
         }
     }
 
-    // Helper function to hit the backend once GPS is acquired
     function sendCreditAPI(name, address, lat, lng) {
         document.getElementById('queue-title').innerText = 'AUTHORIZING...';
         document.getElementById('queue-message').innerText = 'Processing emergency credit...';
@@ -327,13 +336,11 @@
             .then(res => res.json())
             .then(data => {
                 
-                // Toggle Credit Button Visibility dynamically
                 const creditSec = document.getElementById('credit-section');
                 if (creditSec) {
                     creditSec.style.display = data.credit_enabled === 'true' ? 'block' : 'none';
                 }
                 
-                // If admin turns off Away Mode while they are looking at the form, kick them back to menu
                 if (data.credit_enabled !== 'true' && document.getElementById('screen-credit').classList.contains('active')) {
                     showScreen('screen-menu');
                 }
