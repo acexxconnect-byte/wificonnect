@@ -59,13 +59,14 @@
         .btn-action:hover { filter: brightness(1.2); }
 
         /* Dashboard Styles */
-        #dashboard-wrapper { display: none; } /* HIDDEN BY DEFAULT */
+        #dashboard-wrapper { display: none; }
 
-        .tab-bar { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; }
+        /* SCROLLBAR FIX: Switched to flex-wrap */
+        .tab-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
         .tab {
-            flex: 1; background: transparent; color: var(--primary); border: 1px solid var(--primary);
-            padding: 10px; cursor: pointer; font-family: 'Orbitron', sans-serif; font-weight: bold;
-            text-transform: uppercase; text-align: center; white-space: nowrap; transition: 0.2s;
+            flex: 1 1 auto; min-width: 120px; background: transparent; color: var(--primary); border: 1px solid var(--primary);
+            padding: 10px 5px; cursor: pointer; font-family: 'Orbitron', sans-serif; font-weight: bold; font-size: 0.85rem;
+            text-transform: uppercase; text-align: center; transition: 0.2s;
         }
         .tab.active { background: var(--primary); color: var(--dark); box-shadow: 0 0 10px var(--primary-glow); }
         .tab-content { display: none; }
@@ -230,10 +231,9 @@
         // ==========================================
         // SECURITY & LOGIN LOGIC
         // ==========================================
-        const MASTER_PIN = "JACS2026"; // Change this to your preferred secret code
+        const MASTER_PIN = "JACS2026";
         let pollerInterval;
 
-        // Check if already logged in this session
         if (sessionStorage.getItem('jac_admin_auth') === 'verified') {
             unlockDashboard();
         }
@@ -265,7 +265,6 @@
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('dashboard-wrapper').style.display = 'block';
             
-            // Start the data fetching only AFTER they login
             calculateRealTime();
             fetchData();
             pollerInterval = setInterval(fetchData, 3000);
