@@ -160,11 +160,13 @@
             <button class="btn-rate" onclick="requestPlan('30D_10M', 450)">30 Days <span class="price">₱450</span></button>
         </div>
 
-        <!-- HIDDEN BY DEFAULT: Toggled by Admin Away Mode -->
         <div id="credit-section" style="display: none;">
             <div class="tier-header credit-header">>> EMERGENCY UPLINK <<</div>
             <button id="btn-credit-request" class="btn-action" style="background: transparent; border: 1px solid var(--warning); color: var(--warning);">REQUEST 3 HRS CREDIT (₱10)</button>
         </div>
+
+        <!-- NEW: Allows users with active time to cancel out of the menu and return to the dashboard -->
+        <button id="btn-back-dash" class="btn-action btn-buy-more" style="display:none; margin-top: 20px;" onclick="showScreen('screen-dashboard')">RETURN TO DASHBOARD</button>
     </div>
 
     <!-- SCREEN 3: CREDIT FORM -->
@@ -332,36 +334,36 @@
             .then(res => res.json())
             .then(data => {
                 
-                // Toggle Credit Button Visibility and Lock Status
                 const creditSec = document.getElementById('credit-section');
                 const creditBtn = document.getElementById('btn-credit-request');
                 
                 if (creditSec && creditBtn) {
                     creditSec.style.display = data.credit_enabled === 'true' ? 'block' : 'none';
-                    
                     if (data.eligible) {
-                        // Unlocked!
                         creditBtn.onclick = () => showScreen('screen-credit');
                         creditBtn.style.opacity = '1';
                         creditBtn.style.borderColor = 'var(--warning)';
                         creditBtn.innerText = 'REQUEST 3 HRS CREDIT (₱10)';
                     } else {
-                        // Locked!
                         creditBtn.onclick = () => alert('🔒 LOYALTY REWARD LOCKED\n\nYou must purchase a Wi-Fi plan at least 3 times to unlock the Emergency Credit feature. Thank you for your support!');
                         creditBtn.style.opacity = '0.4';
                         creditBtn.style.borderColor = '#555';
                         creditBtn.innerText = '🔒 CREDIT LOCKED (NEEDS 3 PURCHASES)';
                     }
                 }
-                
-                if (data.credit_enabled !== 'true' && document.getElementById('screen-credit').classList.contains('active')) {
-                    showScreen('screen-menu');
-                }
 
                 if (data.type === 'dashboard') {
-                    showScreen('screen-dashboard');
-                    const session = data.data;
+                    // Reveal the 'Return to Dashboard' button on the menu
+                    const backBtn = document.getElementById('btn-back-dash');
+                    if (backBtn) backBtn.style.display = 'block';
 
+                    // ONLY auto-switch to Dashboard if they aren't deliberately browsing the menu
+                    if (!document.getElementById('screen-menu').classList.contains('active') && 
+                        !document.getElementById('screen-credit').classList.contains('active')) {
+                        showScreen('screen-dashboard');
+                    }
+
+                    const session = data.data;
                     if (session.status === 'playing') {
                         const startTime = new Date(session.last_play_time + 'Z').getTime();
                         const secondsPlayed = Math.floor((Date.now() - startTime) / 1000);
