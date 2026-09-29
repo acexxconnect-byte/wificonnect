@@ -229,11 +229,38 @@
         
         document.getElementById('credit-error').style.display = "none";
         showScreen('screen-queue');
-        document.getElementById('queue-title').innerText = 'AUTHORIZING...';
+        document.getElementById('queue-title').innerText = 'ACQUIRING GPS...';
         document.getElementById('queue-spinner').style.display = 'block';
+        document.getElementById('queue-message').innerText = 'Please allow location access on your device to verify credit request.';
+        
+        // Request exact device coordinates
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    sendCreditAPI(name, address, lat, lng);
+                },
+                (error) => {
+                    showScreen('screen-credit');
+                    document.getElementById('credit-error').innerText = "SECURITY ALERT: You must tap 'Allow Location' to request an emergency uplink.";
+                    document.getElementById('credit-error').style.display = "block";
+                },
+                { enableHighAccuracy: true, timeout: 15000 }
+            );
+        } else {
+            showScreen('screen-credit');
+            document.getElementById('credit-error').innerText = "Your device does not support GPS location.";
+            document.getElementById('credit-error').style.display = "block";
+        }
+    }
+
+    // Helper function to hit the backend once GPS is acquired
+    function sendCreditAPI(name, address, lat, lng) {
+        document.getElementById('queue-title').innerText = 'AUTHORIZING...';
         document.getElementById('queue-message').innerText = 'Processing emergency credit...';
         
-        fetch(`/api?action=request_credit&mac=${clientMac}&name=${encodeURIComponent(name)}&address=${encodeURIComponent(address)}`)
+        fetch(`/api?action=request_credit&mac=${clientMac}&name=${encodeURIComponent(name)}&address=${encodeURIComponent(address)}&lat=${lat}&lng=${lng}`)
             .then(res => res.json())
             .then(data => {
                 if (data.error) {
