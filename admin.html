@@ -267,36 +267,57 @@
                 });
         }
 
-        // Force mapping via exact device GPS coordinates
+        // Smart Mapping: Uses GPS if available, falls back to text search if missing!
         function locateOnMap(name, typedAddress, lat, lng) {
             const mapDiv = document.getElementById('credit-map');
-            
-            if (!lat || !lng) {
-                alert("GPS Coordinates not found for this user.");
-                return;
-            }
-
             mapDiv.style.display = 'block';
             
+            // Initialize map if it doesn't exist yet
             if (!map) {
-                map = L.map('credit-map').setView([lat, lng], 18);
+                map = L.map('credit-map').setView([8.5866, 123.3408], 13); // Default Dipolog City
                 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
                 }).addTo(map);
             }
             
             setTimeout(() => { map.invalidateSize(); }, 300);
-            
-            // Fly directly to the device coordinates
-            map.flyTo([lat, lng], 18);
-            
-            if (currentMarker) map.removeLayer(currentMarker);
-            
-            currentMarker = L.marker([lat, lng]).addTo(map)
-                .bindPopup(`<strong style="color:#000;">${name}</strong><br><span style="color:#333;">Typed: ${typedAddress}</span><br><small style="color:var(--success); font-weight:bold;">[GPS VERIFIED]</small>`)
-                .openPopup();
+
+            // SCENARIO 1: We have exact GPS Coordinates
+            if (lat && lng && lat !== 'null' && lng !== 'null' && lat !== '') {
+                map.flyTo([lat, lng], 18);
+                if (currentMarker) map.removeLayer(currentMarker);
                 
-            mapDiv.scrollIntoView({ behavior: 'smooth' });
+                currentMarker = L.marker([lat, lng]).addTo(map)
+                    .bindPopup(`<strong style="color:#000;">${name}</strong><br><span style="color:#333;">Typed: ${typedAddress}</span><br><small style="color:var(--success); font-weight:bold;">[GPS VERIFIED]</small>`)
+                    .openPopup();
+                    
+                mapDiv.scrollIntoView({ behavior: 'smooth' });
+            } 
+            // SCENARIO 2: No GPS (Old entry or failed device). Fallback to Address Search!
+            else {
+                const searchQuery = encodeURIComponent(typedAddress + ", Dipolog City, Zamboanga del Norte, Philippines");
+                
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            const fallbackLat = data[0].lat;
+                            const fallbackLon = data[0].lon;
+                            
+                            map.flyTo([fallbackLat, fallbackLon], 16);
+                            if (currentMarker) map.removeLayer(currentMarker);
+                            
+                            currentMarker = L.marker([fallbackLat, fallbackLon]).addTo(map)
+                                .bindPopup(`<strong style="color:#000;">${name}</strong><br><span style="color:#333;">Typed: ${typedAddress}</span><br><small style="color:var(--warning); font-weight:bold;">[ESTIMATED: NO GPS DATA]</small>`)
+                                .openPopup();
+                                
+                            mapDiv.scrollIntoView({ behavior: 'smooth' });
+                        } else {
+                            alert("No GPS data found, and the map couldn't pinpoint the typed address automatically.");
+                        }
+                    })
+                    .catch(err => console.error("Geocoding Error:", err));
+            }
         }
         
         function approveUser(mac, plan, btn) { btn.innerText = "WAIT..."; fetch(`/api?action=admin_approve&mac=${mac}&plan=${plan}`).then(() => fetchData()); }
