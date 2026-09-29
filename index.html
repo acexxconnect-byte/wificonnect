@@ -4,247 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JAC'S WIFI Portal</title>
-    <!-- Add Google Fonts for Gaming Aesthetic -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --primary: #00f0ff; /* Neon Cyan */
-            --primary-glow: rgba(0, 240, 255, 0.5);
-            --success: #39ff14; /* Neon Green */
-            --warning: #ff003c; /* Cyberpunk Red */
-            --danger: #ff003c;
-            --dark: #0a0a0c; /* Deep Void Black */
-            --panel-bg: #111116; /* Slightly lighter dark for panels */
-            --light: #e0e0e0;
+            --primary: #00f0ff; --primary-glow: rgba(0, 240, 255, 0.5);
+            --success: #39ff14; --warning: #ff003c; --danger: #ff003c;
+            --dark: #0a0a0c; --panel-bg: #111116; --light: #e0e0e0;
             --grid-color: rgba(0, 240, 255, 0.1);
         }
 
         body {
-            font-family: 'Rajdhani', sans-serif;
-            background-color: var(--dark);
-            color: var(--light);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
-            align-items: center;
-            background-image: 
-                linear-gradient(var(--grid-color) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 30px 30px;
-            background-position: center center;
+            font-family: 'Rajdhani', sans-serif; background-color: var(--dark); color: var(--light);
+            margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; align-items: center;
+            background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 30px 30px; background-position: center center;
         }
 
         .container {
-            background: var(--panel-bg);
-            width: 100%;
-            max-width: 400px;
-            border-radius: 4px;
-            border: 1px solid rgba(0, 240, 255, 0.2);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 10px var(--primary-glow);
-            padding: 30px 24px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
+            background: var(--panel-bg); width: 100%; max-width: 400px; border-radius: 4px;
+            border: 1px solid rgba(0, 240, 255, 0.2); box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 10px var(--primary-glow);
+            padding: 30px 24px; text-align: center; position: relative; overflow: hidden;
         }
 
         .container::before, .container::after {
-            content: '';
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--primary);
-            transition: all 0.3s ease;
+            content: ''; position: absolute; width: 20px; height: 20px; border: 2px solid var(--primary); transition: all 0.3s ease;
         }
         .container::before { top: 0; left: 0; border-right: none; border-bottom: none; }
         .container::after { bottom: 0; right: 0; border-left: none; border-top: none; }
 
-        .brand-header {
-            margin-bottom: 25px;
-            border-bottom: 1px solid rgba(0, 240, 255, 0.2);
-            padding-bottom: 15px;
-        }
-        
-        .brand-header h1 {
-            font-family: 'Orbitron', sans-serif;
-            color: #fff;
-            font-size: 2.2rem;
-            margin: 0 0 5px 0;
-            text-shadow: 0 0 10px var(--primary-glow), 0 0 20px var(--primary);
-            letter-spacing: 3px;
-        }
-        
-        .brand-header .tagline {
-            font-family: 'Rajdhani', sans-serif;
-            color: var(--primary);
-            font-size: 0.95rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-        }
+        .brand-header { margin-bottom: 25px; border-bottom: 1px solid rgba(0, 240, 255, 0.2); padding-bottom: 15px; }
+        .brand-header h1 { font-family: 'Orbitron', sans-serif; color: #fff; font-size: 2.2rem; margin: 0 0 5px 0; text-shadow: 0 0 10px var(--primary-glow), 0 0 20px var(--primary); letter-spacing: 3px; }
+        .brand-header .tagline { font-family: 'Rajdhani', sans-serif; color: var(--primary); font-size: 0.95rem; font-weight: 700; letter-spacing: 2px; }
 
         .screen { display: none; animation: glitch-anim 0.3s ease-out forwards; }
         .screen.active { display: block; }
         
-        h2 { 
-            font-family: 'Orbitron', sans-serif; 
-            margin-top: 0; 
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px var(--primary-glow);
-        }
+        h2 { font-family: 'Orbitron', sans-serif; margin-top: 0; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px var(--primary-glow); }
 
         .mac-display { 
-            font-size: 0.9rem; 
-            color: #8892b0; 
-            margin-bottom: 20px; 
-            font-family: 'Orbitron', monospace;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 5px;
-            border: 1px dashed rgba(136, 146, 176, 0.3);
-            display: inline-block;
+            font-size: 0.9rem; color: #8892b0; margin-bottom: 20px; font-family: 'Orbitron', monospace;
+            background: rgba(0, 0, 0, 0.5); padding: 5px; border: 1px dashed rgba(136, 146, 176, 0.3); display: inline-block;
         }
 
         .tier-header {
-            background: rgba(0, 0, 0, 0.6);
-            color: var(--primary);
-            padding: 10px;
-            border-left: 4px solid var(--primary);
-            margin: 20px 0 15px 0;
-            font-weight: 700;
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-family: 'Orbitron', sans-serif;
-            text-align: left;
+            background: rgba(0, 0, 0, 0.6); color: var(--primary); padding: 10px; border-left: 4px solid var(--primary);
+            margin: 20px 0 15px 0; font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; font-family: 'Orbitron', sans-serif; text-align: left;
         }
         
-        .vip-header {
-            color: #ffd700;
-            border-left-color: #ffd700;
-            text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
-        }
+        .vip-header { color: #ffd700; border-left-color: #ffd700; text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+        .credit-header { color: var(--warning); border-left-color: var(--warning); text-shadow: 0 0 5px rgba(255, 0, 60, 0.5); }
 
-        .grid-menu {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
+        .grid-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
         .btn-rate {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(0, 240, 255, 0.3);
-            color: var(--light);
-            padding: 15px 5px;
-            border-radius: 2px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 1.1rem;
-            font-family: 'Rajdhani', sans-serif;
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
-            text-transform: uppercase;
+            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 240, 255, 0.3); color: var(--light);
+            padding: 15px 5px; border-radius: 2px; cursor: pointer; font-weight: 700; font-size: 1.1rem;
+            font-family: 'Rajdhani', sans-serif; transition: all 0.2s ease; position: relative; overflow: hidden; text-transform: uppercase;
         }
+        .btn-rate:hover { border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); background: rgba(0, 240, 255, 0.05); transform: translateY(-2px); }
+        .btn-rate:active { background: var(--primary); color: var(--dark); transform: translateY(0); }
 
-        .btn-rate:hover {
-            border-color: var(--primary);
-            box-shadow: 0 0 15px var(--primary-glow);
-            background: rgba(0, 240, 255, 0.05);
-            transform: translateY(-2px);
-        }
-
-        .btn-rate:active { 
-            background: var(--primary); 
-            color: var(--dark);
-            transform: translateY(0);
-        }
-
-        .price { 
-            color: var(--primary); 
-            font-size: 1.3rem; 
-            display: block; 
-            margin-top: 5px; 
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 900;
-        }
-
+        .price { color: var(--primary); font-size: 1.3rem; display: block; margin-top: 5px; font-family: 'Orbitron', sans-serif; font-weight: 900; }
         .vip-header + .grid-menu .price { color: #ffd700; }
         .vip-header + .grid-menu .btn-rate:hover { border-color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); }
 
         .time-display {
-            font-size: 2.8rem;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 900;
-            color: var(--primary);
-            margin: 20px 0;
-            text-shadow: 0 0 15px var(--primary-glow);
-            background: rgba(0,0,0,0.4);
-            border: 1px solid rgba(0, 240, 255, 0.2);
-            padding: 10px;
-            border-radius: 4px;
-            letter-spacing: 2px;
-            transition: font-size 0.3s ease; /* Smooth transition if sizes change */
+            font-size: 2.8rem; font-family: 'Orbitron', sans-serif; font-weight: 900; color: var(--primary);
+            margin: 20px 0; text-shadow: 0 0 15px var(--primary-glow); background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(0, 240, 255, 0.2); padding: 10px; border-radius: 4px; letter-spacing: 2px; transition: font-size 0.3s ease;
         }
 
         .status-badge {
-            display: inline-block;
-            padding: 6px 16px;
-            border-radius: 2px;
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-            font-family: 'Orbitron', sans-serif;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border: 1px solid transparent;
+            display: inline-block; padding: 6px 16px; border-radius: 2px; font-size: 1rem; font-weight: 700;
+            margin-bottom: 20px; font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 1px; border: 1px solid transparent;
         }
 
-        .status-playing { 
-            background: rgba(57, 255, 20, 0.1); 
-            color: var(--success); 
-            border-color: var(--success);
-            box-shadow: 0 0 10px rgba(57, 255, 20, 0.2);
-        }
-        
-        .status-paused { 
-            background: rgba(255, 0, 60, 0.1); 
-            color: var(--warning); 
-            border-color: var(--warning);
-            box-shadow: 0 0 10px rgba(255, 0, 60, 0.2);
-        }
+        .status-playing { background: rgba(57, 255, 20, 0.1); color: var(--success); border-color: var(--success); box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
+        .status-paused { background: rgba(255, 0, 60, 0.1); color: var(--warning); border-color: var(--warning); box-shadow: 0 0 10px rgba(255, 0, 60, 0.2); }
         
         .btn-action {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 2px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            font-family: 'Orbitron', sans-serif;
-            color: var(--dark);
-            cursor: pointer;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            transition: all 0.2s ease;
-            position: relative;
-            z-index: 1;
+            width: 100%; padding: 15px; border: none; border-radius: 2px; font-size: 1.2rem; font-weight: 700;
+            font-family: 'Orbitron', sans-serif; color: var(--dark); cursor: pointer; margin-bottom: 15px; text-transform: uppercase;
+            letter-spacing: 2px; transition: all 0.2s ease; position: relative; z-index: 1;
         }
-
-        .btn-action::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: inherit;
-            z-index: -1;
-            transition: transform 0.2s ease;
-        }
-
+        .btn-action::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: inherit; z-index: -1; transition: transform 0.2s ease; }
         .btn-action:hover::before { transform: scale(1.02); }
         .btn-action:active { transform: scale(0.98); }
 
@@ -253,32 +97,22 @@
         .btn-buy-more { background: transparent; color: var(--primary); border: 2px solid var(--primary); box-shadow: 0 0 10px var(--primary-glow) inset; }
         .btn-buy-more:hover { background: rgba(0, 240, 255, 0.1); box-shadow: 0 0 15px var(--primary-glow); }
 
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(0, 240, 255, 0.1);
-            border-top: 3px solid var(--primary);
-            border-right: 3px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite, pulse-glow 2s infinite;
-            margin: 30px auto;
+        /* Text Input Styling for Forms */
+        .input-field {
+            width: 100%; padding: 15px; margin-bottom: 15px; background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 240, 255, 0.3); color: var(--primary); font-family: 'Rajdhani', sans-serif;
+            font-size: 1.1rem; border-radius: 2px; box-sizing: border-box; transition: 0.2s;
         }
+        .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
+        .input-field::placeholder { color: #505a75; }
 
+        .spinner { width: 50px; height: 50px; border: 3px solid rgba(0, 240, 255, 0.1); border-top: 3px solid var(--primary); border-right: 3px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite, pulse-glow 2s infinite; margin: 30px auto; }
         #queue-message { font-size: 1.1rem; color: #a8b2d1; }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 5px var(--primary-glow); } 50% { box-shadow: 0 0 20px var(--primary-glow); } }
-        @keyframes glitch-anim {
-            0% { opacity: 0; transform: translateY(10px) skewX(5deg); filter: hue-rotate(90deg); }
-            50% { opacity: 0.8; transform: translateY(-5px) skewX(-5deg); filter: hue-rotate(-90deg); }
-            100% { opacity: 1; transform: translateY(0) skewX(0); filter: hue-rotate(0); }
-        }
-        
-        body::after {
-            content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 999; background-size: 100% 2px, 3px 100%; pointer-events: none;
-        }
+        @keyframes glitch-anim { 0% { opacity: 0; transform: translateY(10px) skewX(5deg); filter: hue-rotate(90deg); } 50% { opacity: 0.8; transform: translateY(-5px) skewX(-5deg); filter: hue-rotate(-90deg); } 100% { opacity: 1; transform: translateY(0) skewX(0); filter: hue-rotate(0); } }
+        body::after { content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); z-index: 999; background-size: 100% 2px, 3px 100%; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -296,7 +130,7 @@
         <h2 id="queue-title">INITIALIZING...</h2>
         <div class="spinner" id="queue-spinner"></div>
         <p id="queue-message">Establishing secure uplink.</p>
-        <button class="btn-action btn-buy-more" id="btn-join-queue" style="display:none;" onclick="joinQueue()">ACCESS NETWORK</button>
+        <button class="btn-action btn-buy-more" id="btn-join-queue" style="display:none;" onclick="showScreen('screen-menu')">ACCESS NETWORK</button>
     </div>
 
     <!-- SCREEN 2: RATE MENU -->
@@ -313,15 +147,31 @@
         </div>
 
         <div class="tier-header vip-header">>> OVERCLOCK [10MBPS]</div>
-        <div class="grid-menu">
+        <div class="grid-menu" style="margin-bottom: 20px;">
             <button class="btn-rate" onclick="requestPlan('3D_10M', 60)">3 Days <span class="price">₱60</span></button>
             <button class="btn-rate" onclick="requestPlan('7D_10M', 130)">7 Days <span class="price">₱130</span></button>
             <button class="btn-rate" onclick="requestPlan('15D_10M', 250)">15 Days <span class="price">₱250</span></button>
             <button class="btn-rate" onclick="requestPlan('30D_10M', 450)">30 Days <span class="price">₱450</span></button>
         </div>
+
+        <div class="tier-header credit-header">>> EMERGENCY UPLINK <<</div>
+        <button class="btn-action" style="background: transparent; border: 1px solid var(--warning); color: var(--warning);" onclick="showScreen('screen-credit')">REQUEST 3 HRS CREDIT (₱10)</button>
     </div>
 
-    <!-- SCREEN 3: DASHBOARD (PLAY/PAUSE) -->
+    <!-- SCREEN 3: CREDIT FORM -->
+    <div id="screen-credit" class="screen">
+        <h2 style="color: var(--warning); text-shadow: 0 0 10px rgba(255, 0, 60, 0.5);">CREDIT AUTH</h2>
+        <p style="color: #8892b0; font-size: 0.9rem; margin-bottom: 20px;">Admin unavailable? Enter details to activate a 3-hour emergency uplink. Pay ₱10 later.</p>
+        
+        <input type="text" id="credit-name" class="input-field" placeholder="Full Name (Required)">
+        <input type="text" id="credit-address" class="input-field" placeholder="Specific Address (Required)">
+        <p id="credit-error" style="color: var(--warning); font-size: 0.9rem; display: none; font-weight: bold;"></p>
+        
+        <button class="btn-action" style="background: var(--warning); color: white;" onclick="submitCredit()">ACTIVATE UPLINK</button>
+        <button class="btn-action btn-buy-more" onclick="showScreen('screen-menu')">CANCEL</button>
+    </div>
+
+    <!-- SCREEN 4: DASHBOARD (PLAY/PAUSE) -->
     <div id="screen-dashboard" class="screen">
         <h2>UPLINK STATUS</h2>
         <div id="status-badge" class="status-badge status-paused">OFFLINE</div>
@@ -331,7 +181,7 @@
 
         <button class="btn-action btn-play" id="btn-play" onclick="toggleConnection('play')">ENGAGE UPLINK</button>
         <button class="btn-action btn-pause" id="btn-pause" onclick="toggleConnection('pause')" style="display:none;">SUSPEND UPLINK</button>
-        <button class="btn-action btn-buy-more" onclick="joinQueue()" style="margin-top: 15px;">AQUIRE MORE TIME</button>
+        <button class="btn-action btn-buy-more" onclick="showScreen('screen-menu')" style="margin-top: 15px;">AQUIRE MORE TIME</button>
     </div>
 </div>
 
@@ -350,8 +200,6 @@
         document.getElementById(screenId).classList.add('active');
     }
 
-    function joinQueue() { showScreen('screen-menu'); }
-
     function requestPlan(planCode, price) {
         showScreen('screen-queue');
         document.getElementById('queue-title').innerText = 'ESTABLISHING...';
@@ -364,6 +212,34 @@
                 document.getElementById('queue-title').innerText = 'AWAITING AUTH';
                 document.getElementById('queue-spinner').style.display = 'none';
                 document.getElementById('queue-message').innerText = `Transfer ₱${price} to network admin.`;
+            });
+    }
+
+    function submitCredit() {
+        const name = document.getElementById('credit-name').value.trim();
+        const address = document.getElementById('credit-address').value.trim();
+        
+        if (!name || !address) {
+            document.getElementById('credit-error').innerText = "Name and Address are strictly required.";
+            document.getElementById('credit-error').style.display = "block";
+            return;
+        }
+        
+        document.getElementById('credit-error').style.display = "none";
+        showScreen('screen-queue');
+        document.getElementById('queue-title').innerText = 'AUTHORIZING...';
+        document.getElementById('queue-spinner').style.display = 'block';
+        document.getElementById('queue-message').innerText = 'Processing emergency credit...';
+        
+        fetch(`/api?action=request_credit&mac=${clientMac}&name=${encodeURIComponent(name)}&address=${encodeURIComponent(address)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    showScreen('screen-credit');
+                    document.getElementById('credit-error').innerText = data.error;
+                    document.getElementById('credit-error').style.display = "block";
+                }
+                // If successful, the background poller will automatically flip them to the dashboard
             });
     }
 
@@ -388,10 +264,8 @@
     let cachedSecondsLeft = 0;
     let isPlaying = false;
 
-    // 1-Second Fast UI Tick
     setInterval(() => {
         let displaySeconds = 0;
-        
         if (isPlaying && sessionEndTime) {
             displaySeconds = Math.floor((sessionEndTime - Date.now()) / 1000);
         } else {
@@ -407,21 +281,16 @@
 
         const timeLabel = document.getElementById('time-label');
         const timeDisplay = document.getElementById('time-remaining');
-
         if (!timeLabel || !timeDisplay) return;
 
         if (days > 0) {
-            // Over 24 hours: Shrink font to fit the text string
             timeLabel.innerText = "SYS. TIME REMAINING";
             timeDisplay.style.fontSize = "1.5rem";
             timeDisplay.innerText = `${days} DAYS, ${hours} HRS and ${mins} MINS`;
         } else {
-            // Under 24 hours: Use the massive digital clock font
             timeLabel.innerText = "SYS. TIME (HRS : MIN : SEC)";
             timeDisplay.style.fontSize = "2.8rem";
-            timeDisplay.innerText = String(hours).padStart(2, '0') + ':' + 
-                                    String(mins).padStart(2, '0') + ':' + 
-                                    String(secs).padStart(2, '0');
+            timeDisplay.innerText = String(hours).padStart(2, '0') + ':' + String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
         }
     }, 1000);
 
@@ -430,7 +299,6 @@
         fetch(`/api?action=status&mac=${clientMac}`)
             .then(res => res.json())
             .then(data => {
-                
                 if (data.type === 'dashboard') {
                     showScreen('screen-dashboard');
                     const session = data.data;
@@ -438,7 +306,6 @@
                     if (session.status === 'playing') {
                         const startTime = new Date(session.last_play_time + 'Z').getTime();
                         const secondsPlayed = Math.floor((Date.now() - startTime) / 1000);
-                        
                         cachedSecondsLeft = (session.total_minutes_bought * 60) - (session.minutes_used * 60) - secondsPlayed;
                         sessionEndTime = Date.now() + (cachedSecondsLeft * 1000);
                         isPlaying = true;
@@ -459,7 +326,7 @@
                 } 
                 else if (data.type === 'queue') {
                     if (!data.data.requested_plan) {
-                        if (!document.getElementById('screen-menu').classList.contains('active')) {
+                        if (!document.getElementById('screen-menu').classList.contains('active') && !document.getElementById('screen-credit').classList.contains('active')) {
                             showScreen('screen-menu');
                         }
                     } else {
@@ -473,7 +340,7 @@
                     }
                 } 
                 else {
-                    if (!document.getElementById('screen-menu').classList.contains('active')) {
+                    if (!document.getElementById('screen-menu').classList.contains('active') && !document.getElementById('screen-credit').classList.contains('active')) {
                         showScreen('screen-queue');
                         document.getElementById('queue-title').innerText = 'SYSTEM READY';
                         document.getElementById('queue-spinner').style.display = 'none';
@@ -481,7 +348,6 @@
                         document.getElementById('btn-join-queue').style.display = 'block';
                     }
                 }
-
             })
             .catch(err => console.error("API Error:", err));
     }, 3000);
