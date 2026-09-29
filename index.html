@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>  
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JAC'S WIFI Portal</title>
@@ -97,7 +97,6 @@
         .btn-buy-more { background: transparent; color: var(--primary); border: 2px solid var(--primary); box-shadow: 0 0 10px var(--primary-glow) inset; }
         .btn-buy-more:hover { background: rgba(0, 240, 255, 0.1); box-shadow: 0 0 15px var(--primary-glow); }
 
-        /* Text Input Styling for Forms */
         .input-field {
             width: 100%; padding: 15px; margin-bottom: 15px; background: rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(0, 240, 255, 0.3); color: var(--primary); font-family: 'Rajdhani', sans-serif;
@@ -154,14 +153,17 @@
             <button class="btn-rate" onclick="requestPlan('30D_10M', 450)">30 Days <span class="price">₱450</span></button>
         </div>
 
-        <div class="tier-header credit-header">>> EMERGENCY UPLINK <<</div>
-        <button class="btn-action" style="background: transparent; border: 1px solid var(--warning); color: var(--warning);" onclick="showScreen('screen-credit')">REQUEST 3 HRS CREDIT (₱10)</button>
+        <!-- HIDDEN BY DEFAULT: Toggled by Admin Away Mode -->
+        <div id="credit-section" style="display: none;">
+            <div class="tier-header credit-header">>> EMERGENCY UPLINK <<</div>
+            <button class="btn-action" style="background: transparent; border: 1px solid var(--warning); color: var(--warning);" onclick="showScreen('screen-credit')">REQUEST 3 HRS CREDIT (₱10)</button>
+        </div>
     </div>
 
     <!-- SCREEN 3: CREDIT FORM -->
     <div id="screen-credit" class="screen">
         <h2 style="color: var(--warning); text-shadow: 0 0 10px rgba(255, 0, 60, 0.5);">CREDIT AUTH</h2>
-        <p style="color: #8892b0; font-size: 0.9rem; margin-bottom: 20px;">Admin unavailable? Enter details to activate a 3-hour emergency uplink. Pay ₱10 later.</p>
+        <p style="color: #8892b0; font-size: 0.9rem; margin-bottom: 20px;">Admin is currently AWAY. Enter details to activate a 3-hour emergency uplink. Pay ₱10 later.</p>
         
         <input type="text" id="credit-name" class="input-field" placeholder="Full Name (Required)">
         <input type="text" id="credit-address" class="input-field" placeholder="Specific Address (Required)">
@@ -239,7 +241,6 @@
                     document.getElementById('credit-error').innerText = data.error;
                     document.getElementById('credit-error').style.display = "block";
                 }
-                // If successful, the background poller will automatically flip them to the dashboard
             });
     }
 
@@ -259,7 +260,6 @@
         }
     }
 
-    // --- SEPARATE TIMER LOGIC ---
     let sessionEndTime = null;
     let cachedSecondsLeft = 0;
     let isPlaying = false;
@@ -299,6 +299,18 @@
         fetch(`/api?action=status&mac=${clientMac}`)
             .then(res => res.json())
             .then(data => {
+                
+                // Toggle Credit Button Visibility dynamically
+                const creditSec = document.getElementById('credit-section');
+                if (creditSec) {
+                    creditSec.style.display = data.credit_enabled === 'true' ? 'block' : 'none';
+                }
+                
+                // If admin turns off Away Mode while they are looking at the form, kick them back to menu
+                if (data.credit_enabled !== 'true' && document.getElementById('screen-credit').classList.contains('active')) {
+                    showScreen('screen-menu');
+                }
+
                 if (data.type === 'dashboard') {
                     showScreen('screen-dashboard');
                     const session = data.data;
