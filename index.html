@@ -198,26 +198,35 @@
     let sessionEndTime = null; 
     let cachedSecondsLeft = 0; 
     let isPlaying = false;
-    let notified10Min = false; // 10-Minute Warning Flag
+    let notified10Min = false; 
 
     setInterval(() => {
         let displaySeconds = 0;
         if (isPlaying && sessionEndTime) { displaySeconds = Math.floor((sessionEndTime - Date.now()) / 1000); } else { displaySeconds = cachedSecondsLeft; }
         if (displaySeconds < 0) displaySeconds = 0;
 
-        // NEW: 10-Minute Warning Logic
+        // 10-MINUTE WARNING LOGIC
         if (displaySeconds <= 600 && displaySeconds > 0 && !notified10Min) {
             notified10Min = true;
+            
+            // Text Alert (Only visible if they happen to look at the browser)
             alert("⚠️ SYSTEM WARNING\n\nYour network uplink will expire in 10 minutes. Please acquire more time to prevent disconnection.");
+            
+            // VOICE ALARM (Plays through phone speakers even if app is minimized!)
+            if ('speechSynthesis' in window) {
+                let msg = new SpeechSynthesisUtterance("Warning. Your Wi Fi time will expire in ten minutes.");
+                msg.rate = 1.0;
+                window.speechSynthesis.speak(msg);
+            }
         } else if (displaySeconds > 600) {
-            notified10Min = false; // Reset the warning if they buy more time
+            notified10Min = false; // Reset if they buy more time
         }
 
         const days = Math.floor(displaySeconds / 86400); const hours = Math.floor((displaySeconds % 86400) / 3600); const mins = Math.floor((displaySeconds % 3600) / 60); const secs = displaySeconds % 60;
         const timeLabel = document.getElementById('time-label'); const timeDisplay = document.getElementById('time-remaining');
         if (!timeLabel || !timeDisplay) return;
 
-        // NEW: Visual Dashboard Danger Colors
+        // Turn clock red when under 10 minutes
         if (displaySeconds <= 600 && displaySeconds > 0) {
             timeDisplay.style.color = "var(--warning)";
             timeDisplay.style.textShadow = "0 0 15px rgba(255, 0, 60, 0.8)";
