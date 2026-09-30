@@ -36,7 +36,7 @@
         .vip-header + .grid-menu .price { color: var(--secondary); }
         .vip-header + .grid-menu .btn-rate:hover { border-color: var(--secondary); box-shadow: 0 0 15px var(--secondary-glow); background: rgba(255, 140, 0, 0.05); }
         .vip-header + .grid-menu .btn-rate:active { background: var(--secondary); color: var(--dark); }
-        .time-display { font-size: 2.8rem; font-family: 'Orbitron', sans-serif; font-weight: 900; color: var(--primary); margin: 20px 0; text-shadow: 0 0 15px var(--primary-glow); background: rgba(0,0,0,0.4); border: 1px solid rgba(0, 210, 255, 0.2); padding: 10px; border-radius: 4px; letter-spacing: 2px; transition: font-size 0.3s ease; }
+        .time-display { font-size: 2.8rem; font-family: 'Orbitron', sans-serif; font-weight: 900; color: var(--primary); margin: 20px 0; text-shadow: 0 0 15px var(--primary-glow); background: rgba(0,0,0,0.4); border: 1px solid rgba(0, 210, 255, 0.2); padding: 10px; border-radius: 4px; letter-spacing: 2px; transition: color 0.3s ease, text-shadow 0.3s ease, font-size 0.3s ease; }
         .status-badge { display: inline-block; padding: 6px 16px; border-radius: 2px; font-size: 1rem; font-weight: 700; margin-bottom: 20px; font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 1px; border: 1px solid transparent; }
         .status-playing { background: rgba(255, 140, 0, 0.1); color: var(--success); border-color: var(--success); box-shadow: 0 0 10px var(--secondary-glow); }
         .status-paused { background: rgba(255, 0, 60, 0.1); color: var(--warning); border-color: var(--warning); box-shadow: 0 0 10px rgba(255, 0, 60, 0.2); }
@@ -110,7 +110,6 @@
         
         <div class="time-display" id="time-remaining">00:00:00</div>
         
-        <!-- NEW: Expiration Indicator Display -->
         <div id="expiry-badge" style="color: var(--warning); font-size: 0.85rem; font-weight: bold; margin-bottom: 15px; font-family: 'Rajdhani', sans-serif;"></div>
 
         <button class="btn-action btn-play" id="btn-play" onclick="toggleConnection('play')">ENGAGE UPLINK</button>
@@ -196,14 +195,37 @@
         }
     }
 
-    let sessionEndTime = null; let cachedSecondsLeft = 0; let isPlaying = false;
+    let sessionEndTime = null; 
+    let cachedSecondsLeft = 0; 
+    let isPlaying = false;
+    let notified10Min = false; // 10-Minute Warning Flag
+
     setInterval(() => {
         let displaySeconds = 0;
         if (isPlaying && sessionEndTime) { displaySeconds = Math.floor((sessionEndTime - Date.now()) / 1000); } else { displaySeconds = cachedSecondsLeft; }
         if (displaySeconds < 0) displaySeconds = 0;
+
+        // NEW: 10-Minute Warning Logic
+        if (displaySeconds <= 600 && displaySeconds > 0 && !notified10Min) {
+            notified10Min = true;
+            alert("⚠️ SYSTEM WARNING\n\nYour network uplink will expire in 10 minutes. Please acquire more time to prevent disconnection.");
+        } else if (displaySeconds > 600) {
+            notified10Min = false; // Reset the warning if they buy more time
+        }
+
         const days = Math.floor(displaySeconds / 86400); const hours = Math.floor((displaySeconds % 86400) / 3600); const mins = Math.floor((displaySeconds % 3600) / 60); const secs = displaySeconds % 60;
         const timeLabel = document.getElementById('time-label'); const timeDisplay = document.getElementById('time-remaining');
         if (!timeLabel || !timeDisplay) return;
+
+        // NEW: Visual Dashboard Danger Colors
+        if (displaySeconds <= 600 && displaySeconds > 0) {
+            timeDisplay.style.color = "var(--warning)";
+            timeDisplay.style.textShadow = "0 0 15px rgba(255, 0, 60, 0.8)";
+        } else {
+            timeDisplay.style.color = "var(--primary)";
+            timeDisplay.style.textShadow = "0 0 15px var(--primary-glow)";
+        }
+
         if (days > 0) { timeLabel.innerText = "SYS. TIME REMAINING"; timeDisplay.style.fontSize = "1.5rem"; timeDisplay.innerText = `${days} DAYS, ${hours} HRS and ${mins} MINS`; } 
         else { timeLabel.innerText = "SYS. TIME (HRS : MIN : SEC)"; timeDisplay.style.fontSize = "2.8rem"; timeDisplay.innerText = String(hours).padStart(2, '0') + ':' + String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0'); }
     }, 1000);
@@ -232,7 +254,6 @@
                     
                     const session = data.data;
                     
-                    // Display the Expiration Date locally
                     const expBadge = document.getElementById('expiry-badge');
                     if (session.expires_at) {
                         const expDate = new Date(session.expires_at);
