@@ -5,12 +5,41 @@ export async function onRequest(context) {
     const action = url.searchParams.get('action');
     const mac = url.searchParams.get('mac');
 
-    const adminActions = ['admin_list', 'admin_active_list', 'admin_credit_list', 'admin_clear_credit', 'admin_get_settings', 'admin_toggle_credit'];
+    const adminActions = ['admin_list', 'admin_active_list', 'admin_credit_list', 'admin_clear_credit', 'admin_get_settings', 'admin_toggle_credit', 'admin_save_rates', 'get_rates'];
     if (!mac && !adminActions.includes(action)) {
         return Response.json({ error: 'Missing MAC Address' }, { status: 400 });
     }
 
+    // NEW: Central source of truth for dynamic pricing
+    async function getRates() {
+        let rates = {
+            std1: { n: "1 Hour", m: 60, p: 5 },
+            std2: { n: "3 Hours", m: 180, p: 10 },
+            std3: { n: "10 Hours", m: 600, p: 20 },
+            std4: { n: "24 Hours", m: 1440, p: 30 },
+            vip1: { n: "3 Days", m: 4320, p: 60 },
+            vip2: { n: "7 Days", m: 10080, p: 130 },
+            vip3: { n: "15 Days", m: 21600, p: 250 },
+            vip4: { n: "30 Days", m: 43200, p: 450 }
+        };
+        try {
+            const setting = await env.DB.prepare("SELECT value FROM system_settings WHERE key = 'rates_config'").first();
+            if (setting && setting.value) rates = JSON.parse(setting.value);
+        } catch(e) {}
+        return rates;
+    }
+
     try {
+        if (action === 'get_rates') {
+            return Response.json(await getRates());
+        }
+
+        if (action === 'admin_save_rates') {
+            const ratesJson = url.searchParams.get('rates');
+            await env.DB.prepare("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('rates_config', ?)").bind(ratesJson).run();
+            return Response.json({ success: true });
+        }
+
         if (action === 'admin_get_settings') {
             let creditEnabled = 'false';
             try {
@@ -26,7 +55,6 @@ export async function onRequest(context) {
                 const setting = await env.DB.prepare("SELECT value FROM system_settings WHERE key = 'credit_enabled'").first();
                 if (setting) current = setting.value;
             } catch(e) {}
-            
             const newVal = current === 'true' ? 'false' : 'true';
             await env.DB.prepare("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('credit_enabled', ?)").bind(newVal).run();
             return Response.json({ success: true, credit_enabled: newVal });
@@ -79,8 +107,8 @@ export async function onRequest(context) {
         
         if (action === 'admin_approve') {
             const plan = url.searchParams.get('plan');
-            const planMinutes = { '1H_5M': 60, '3H_5M': 180, '10H_5M': 600, '1D_5M': 1440, '3D_10M': 4320, '7D_10M': 10080, '15D_10M': 21600, '30D_10M': 43200 };
-            const minutesBought = planMinutes[plan] || 0;
+            const rates = await getRates();
+            const minutesBought = rates[plan] ? rates[plan].m : 0;
 
             const existingSession = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
             
@@ -110,9 +138,6 @@ export async function onRequest(context) {
             return Response.json({ success: true });
         }
 
-        // ==========================================
-        // ACTION: CHECK STATUS (FIXED LOGIC)
-        // ==========================================
         if (action === 'status') {
             let creditEnabled = 'false';
             try {
@@ -124,7 +149,6 @@ export async function onRequest(context) {
             const pCount = sessionAll ? (sessionAll.purchase_count || 0) : 0;
             const isEligible = pCount >= 3;
 
-            // CRITICAL FIX: Check the Queue FIRST, so users stacking time see the "Awaiting Auth" screen
             const queue = await env.DB.prepare("SELECT * FROM digital_queue WHERE client_mac = ?").bind(mac).first();
             if (queue) {
                 let position = 1;
@@ -135,7 +159,6 @@ export async function onRequest(context) {
                 return Response.json({ type: 'queue', data: queue, position: position, credit_enabled: creditEnabled, eligible: isEligible });
             }
 
-            // ONLY check dashboard if they are NOT in the queue
             if (sessionAll && sessionAll.total_minutes_bought > sessionAll.minutes_used) {
                 return Response.json({ type: 'dashboard', data: sessionAll, credit_enabled: creditEnabled, eligible: isEligible });
             }
@@ -150,8 +173,9 @@ export async function onRequest(context) {
 
         if (action === 'request') {
             const plan = url.searchParams.get('plan');
-            const prices = { '1H_5M': 5, '3H_5M': 10, '10H_5M': 20, '1D_5M': 30, '3D_10M': 60, '7D_10M': 130, '15D_10M': 250, '30D_10M': 450 };
-            await env.DB.prepare("UPDATE digital_queue SET requested_plan = ?, payment_amount = ? WHERE client_mac = ?").bind(plan, prices[plan] || 0, mac).run();
+            const rates = await getRates();
+            const amount = rates[plan] ? rates[plan].p : 0;
+            await env.DB.prepare("UPDATE digital_queue SET requested_plan = ?, payment_amount = ? WHERE client_mac = ?").bind(plan, amount, mac).run();
             return Response.json({ success: true });
         }
 
