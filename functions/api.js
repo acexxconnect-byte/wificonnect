@@ -10,7 +10,7 @@ export async function onRequest(context) {
         return Response.json({ error: 'Missing MAC Address' }, { status: 400 });
     }
 
-    // NEW: Central source of truth for dynamic pricing
+    // Central source of truth for dynamic pricing
     async function getRates() {
         let rates = {
             std1: { n: "1 Hour", m: 60, p: 5 },
@@ -145,6 +145,9 @@ export async function onRequest(context) {
                 if (setting) creditEnabled = setting.value;
             } catch(e) {}
 
+            // LOAD LIVE RATES TO SEND TO CLIENT
+            const rates = await getRates();
+
             const sessionAll = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
             const pCount = sessionAll ? (sessionAll.purchase_count || 0) : 0;
             const isEligible = pCount >= 3;
@@ -156,14 +159,14 @@ export async function onRequest(context) {
                     const ahead = await env.DB.prepare("SELECT COUNT(*) as count FROM digital_queue WHERE status = 'waiting' AND joined_at < ?").bind(queue.joined_at).first();
                     position = ahead.count + 1;
                 }
-                return Response.json({ type: 'queue', data: queue, position: position, credit_enabled: creditEnabled, eligible: isEligible });
+                return Response.json({ type: 'queue', data: queue, position: position, credit_enabled: creditEnabled, eligible: isEligible, rates: rates });
             }
 
             if (sessionAll && sessionAll.total_minutes_bought > sessionAll.minutes_used) {
-                return Response.json({ type: 'dashboard', data: sessionAll, credit_enabled: creditEnabled, eligible: isEligible });
+                return Response.json({ type: 'dashboard', data: sessionAll, credit_enabled: creditEnabled, eligible: isEligible, rates: rates });
             }
 
-            return Response.json({ type: 'none', credit_enabled: creditEnabled, eligible: isEligible });
+            return Response.json({ type: 'none', credit_enabled: creditEnabled, eligible: isEligible, rates: rates });
         }
 
         if (action === 'join') {
