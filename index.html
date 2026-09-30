@@ -184,6 +184,13 @@
     }
 
     function toggleConnection(action) {
+        // Ask for System Notification Permission when they click "ENGAGE UPLINK"
+        if ("Notification" in window) {
+            if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+                Notification.requestPermission();
+            }
+        }
+
         if (action === 'play') {
             document.getElementById('btn-play').style.display = 'none'; document.getElementById('btn-pause').style.display = 'block'; document.getElementById('status-badge').className = 'status-badge status-playing'; document.getElementById('status-badge').innerText = 'ACTIVE';
             fetch(`/api?action=play&mac=${clientMac}`).then(res => res.json()).then(data => {
@@ -209,15 +216,24 @@
         if (displaySeconds <= 600 && displaySeconds > 0 && !notified10Min) {
             notified10Min = true;
             
-            // Text Alert (Only visible if they happen to look at the browser)
+            // 1. Text Alert (If browser is open)
             alert("⚠️ SYSTEM WARNING\n\nYour network uplink will expire in 10 minutes. Please acquire more time to prevent disconnection.");
             
-            // VOICE ALARM (Plays through phone speakers even if app is minimized!)
+            // 2. VOICE ALARM (If browser is open)
             if ('speechSynthesis' in window) {
                 let msg = new SpeechSynthesisUtterance("Warning. Your Wi Fi time will expire in ten minutes.");
                 msg.rate = 1.0;
                 window.speechSynthesis.speak(msg);
             }
+
+            // 3. SYSTEM NOTIFICATION (Shows as a drop-down banner while playing games!)
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification("⚠️ JAC'S WIFI ALERT", {
+                    body: "Your network time will expire in 10 minutes! Acquire more time to stay connected.",
+                    vibrate: [200, 100, 200]
+                });
+            }
+
         } else if (displaySeconds > 600) {
             notified10Min = false; // Reset if they buy more time
         }
