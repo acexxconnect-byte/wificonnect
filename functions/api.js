@@ -10,9 +10,9 @@ export async function onRequest(context) {
         return Response.json({ error: 'Missing MAC Address' }, { status: 400 });
     }
 
-    // Central source of truth for dynamic pricing
+    // UPDATED: Central source of truth with Empty-Data Failsafe
     async function getRates() {
-        let rates = {
+        let defaultRates = {
             std1: { n: "1 Hour", m: 60, p: 5 },
             std2: { n: "3 Hours", m: 180, p: 10 },
             std3: { n: "10 Hours", m: 600, p: 20 },
@@ -24,9 +24,16 @@ export async function onRequest(context) {
         };
         try {
             const setting = await env.DB.prepare("SELECT value FROM system_settings WHERE key = 'rates_config'").first();
-            if (setting && setting.value) rates = JSON.parse(setting.value);
+            if (setting && setting.value) {
+                let parsed = JSON.parse(setting.value);
+                // Failsafe: Only use the saved database rates if it actually contains data
+                if (Object.keys(parsed).length > 0) {
+                    return parsed;
+                }
+            }
         } catch(e) {}
-        return rates;
+        
+        return defaultRates; // Fallback to defaults if DB is empty or corrupted
     }
 
     try {
@@ -36,6 +43,10 @@ export async function onRequest(context) {
 
         if (action === 'admin_save_rates') {
             const ratesJson = url.searchParams.get('rates');
+            // Check if the payload is actually an empty object before saving
+            if (ratesJson === '{}') {
+                return Response.json({ error: 'Cannot save empty rates' }, { status: 400 });
+            }
             await env.DB.prepare("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('rates_config', ?)").bind(ratesJson).run();
             return Response.json({ success: true });
         }
@@ -145,7 +156,6 @@ export async function onRequest(context) {
                 if (setting) creditEnabled = setting.value;
             } catch(e) {}
 
-            // LOAD LIVE RATES TO SEND TO CLIENT
             const rates = await getRates();
 
             const sessionAll = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
