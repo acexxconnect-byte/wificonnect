@@ -8,114 +8,50 @@
     
     <style>
         :root {
-            --primary: #00d2ff;
-            --primary-glow: rgba(0, 210, 255, 0.5);
-            --secondary: #ff8c00;
-            --secondary-glow: rgba(255, 140, 0, 0.5);
-            --success: #ff8c00;
-            --warning: #ff003c; 
-            --danger: #ff003c;
-            --dark: #0a0a0c; 
-            --panel-bg: #111116; 
-            --light: #e0e0e0;
-            --grid-color: rgba(0, 210, 255, 0.1);
+            --primary: #00d2ff; --primary-glow: rgba(0, 210, 255, 0.5);
+            --secondary: #ff8c00; --secondary-glow: rgba(255, 140, 0, 0.5);
+            --success: #ff8c00; --warning: #ff003c; --danger: #ff003c;
+            --dark: #0a0a0c; --panel-bg: #111116; --light: #e0e0e0; --grid-color: rgba(0, 210, 255, 0.1);
         }
-
-        body {
-            font-family: 'Rajdhani', sans-serif; background-color: var(--dark); color: var(--light);
-            margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; align-items: center;
-            background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 30px 30px; background-position: center center;
-        }
-
-        .container {
-            background: var(--panel-bg); width: 100%; max-width: 400px; border-radius: 4px;
-            border: 1px solid rgba(0, 210, 255, 0.2); box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 10px var(--primary-glow);
-            padding: 30px 24px; text-align: center; position: relative; overflow: hidden;
-        }
-
-        .container::before, .container::after {
-            content: ''; position: absolute; width: 20px; height: 20px; border: 2px solid var(--primary); transition: all 0.3s ease;
-        }
+        body { font-family: 'Rajdhani', sans-serif; background-color: var(--dark); color: var(--light); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; align-items: center; background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px); background-size: 30px 30px; background-position: center center; }
+        .container { background: var(--panel-bg); width: 100%; max-width: 400px; border-radius: 4px; border: 1px solid rgba(0, 210, 255, 0.2); box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 10px var(--primary-glow); padding: 30px 24px; text-align: center; position: relative; overflow: hidden; }
+        .container::before, .container::after { content: ''; position: absolute; width: 20px; height: 20px; border: 2px solid var(--primary); transition: all 0.3s ease; }
         .container::before { top: 0; left: 0; border-right: none; border-bottom: none; }
         .container::after { bottom: 0; right: 0; border-left: none; border-top: none; }
-
         .brand-header { margin-bottom: 20px; border-bottom: 1px solid rgba(0, 210, 255, 0.2); padding-bottom: 15px; }
-        
         .brand-logo { width: 100%; max-width: 160px; height: auto; margin: 0 auto; display: block; filter: drop-shadow(0 0 15px var(--primary-glow)); }
-
         .screen { display: none; animation: glitch-anim 0.3s ease-out forwards; }
         .screen.active { display: block; }
-        
         h2 { font-family: 'Orbitron', sans-serif; margin-top: 0; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px var(--primary-glow); }
-
-        .mac-display { 
-            font-size: 0.9rem; color: #8892b0; margin-bottom: 20px; font-family: 'Orbitron', monospace;
-            background: rgba(0, 0, 0, 0.5); padding: 5px; border: 1px dashed rgba(136, 146, 176, 0.3); display: inline-block;
-        }
-
-        .tier-header {
-            background: rgba(0, 0, 0, 0.6); color: var(--primary); padding: 10px; border-left: 4px solid var(--primary);
-            margin: 20px 0 15px 0; font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; font-family: 'Orbitron', sans-serif; text-align: left;
-        }
-        
+        .mac-display { font-size: 0.9rem; color: #8892b0; margin-bottom: 20px; font-family: 'Orbitron', monospace; background: rgba(0, 0, 0, 0.5); padding: 5px; border: 1px dashed rgba(136, 146, 176, 0.3); display: inline-block; }
+        .tier-header { background: rgba(0, 0, 0, 0.6); color: var(--primary); padding: 10px; border-left: 4px solid var(--primary); margin: 20px 0 15px 0; font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; font-family: 'Orbitron', sans-serif; text-align: left; }
         .vip-header { color: var(--secondary); border-left-color: var(--secondary); text-shadow: 0 0 5px var(--secondary-glow); }
         .credit-header { color: var(--warning); border-left-color: var(--warning); text-shadow: 0 0 5px rgba(255, 0, 60, 0.5); }
-
         .grid-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-        .btn-rate {
-            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 210, 255, 0.3); color: var(--light);
-            padding: 15px 5px; border-radius: 2px; cursor: pointer; font-weight: 700; font-size: 1.1rem;
-            font-family: 'Rajdhani', sans-serif; transition: all 0.2s ease; position: relative; overflow: hidden; text-transform: uppercase;
-        }
+        .btn-rate { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 210, 255, 0.3); color: var(--light); padding: 15px 5px; border-radius: 2px; cursor: pointer; font-weight: 700; font-size: 1.1rem; font-family: 'Rajdhani', sans-serif; transition: all 0.2s ease; position: relative; overflow: hidden; text-transform: uppercase; }
         .btn-rate:hover { border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); background: rgba(0, 210, 255, 0.05); transform: translateY(-2px); }
         .btn-rate:active { background: var(--primary); color: var(--dark); transform: translateY(0); }
-
         .price { color: var(--primary); font-size: 1.3rem; display: block; margin-top: 5px; font-family: 'Orbitron', sans-serif; font-weight: 900; }
         .vip-header + .grid-menu .price { color: var(--secondary); }
         .vip-header + .grid-menu .btn-rate:hover { border-color: var(--secondary); box-shadow: 0 0 15px var(--secondary-glow); background: rgba(255, 140, 0, 0.05); }
         .vip-header + .grid-menu .btn-rate:active { background: var(--secondary); color: var(--dark); }
-
-        .time-display {
-            font-size: 2.8rem; font-family: 'Orbitron', sans-serif; font-weight: 900; color: var(--primary);
-            margin: 20px 0; text-shadow: 0 0 15px var(--primary-glow); background: rgba(0,0,0,0.4);
-            border: 1px solid rgba(0, 210, 255, 0.2); padding: 10px; border-radius: 4px; letter-spacing: 2px; transition: font-size 0.3s ease;
-        }
-
-        .status-badge {
-            display: inline-block; padding: 6px 16px; border-radius: 2px; font-size: 1rem; font-weight: 700;
-            margin-bottom: 20px; font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 1px; border: 1px solid transparent;
-        }
-
+        .time-display { font-size: 2.8rem; font-family: 'Orbitron', sans-serif; font-weight: 900; color: var(--primary); margin: 20px 0; text-shadow: 0 0 15px var(--primary-glow); background: rgba(0,0,0,0.4); border: 1px solid rgba(0, 210, 255, 0.2); padding: 10px; border-radius: 4px; letter-spacing: 2px; transition: font-size 0.3s ease; }
+        .status-badge { display: inline-block; padding: 6px 16px; border-radius: 2px; font-size: 1rem; font-weight: 700; margin-bottom: 20px; font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 1px; border: 1px solid transparent; }
         .status-playing { background: rgba(255, 140, 0, 0.1); color: var(--success); border-color: var(--success); box-shadow: 0 0 10px var(--secondary-glow); }
         .status-paused { background: rgba(255, 0, 60, 0.1); color: var(--warning); border-color: var(--warning); box-shadow: 0 0 10px rgba(255, 0, 60, 0.2); }
-        
-        .btn-action {
-            width: 100%; padding: 15px; border: none; border-radius: 2px; font-size: 1.2rem; font-weight: 700;
-            font-family: 'Orbitron', sans-serif; color: var(--dark); cursor: pointer; margin-bottom: 15px; text-transform: uppercase;
-            letter-spacing: 2px; transition: all 0.2s ease; position: relative; z-index: 1;
-        }
+        .btn-action { width: 100%; padding: 15px; border: none; border-radius: 2px; font-size: 1.2rem; font-weight: 700; font-family: 'Orbitron', sans-serif; color: var(--dark); cursor: pointer; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px; transition: all 0.2s ease; position: relative; z-index: 1; }
         .btn-action::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: inherit; z-index: -1; transition: transform 0.2s ease; }
         .btn-action:hover::before { transform: scale(1.02); }
         .btn-action:active { transform: scale(0.98); }
-
         .btn-play { background: var(--success); box-shadow: 0 0 15px var(--secondary-glow); }
         .btn-pause { background: var(--warning); color: white; box-shadow: 0 0 15px rgba(255, 0, 60, 0.5); }
         .btn-buy-more { background: transparent; color: var(--primary); border: 2px solid var(--primary); box-shadow: 0 0 10px var(--primary-glow) inset; }
         .btn-buy-more:hover { background: rgba(0, 210, 255, 0.1); box-shadow: 0 0 15px var(--primary-glow); }
-
-        .input-field {
-            width: 100%; padding: 15px; margin-bottom: 15px; background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(0, 210, 255, 0.3); color: var(--primary); font-family: 'Rajdhani', sans-serif;
-            font-size: 1.1rem; border-radius: 2px; box-sizing: border-box; transition: 0.2s;
-        }
+        .input-field { width: 100%; padding: 15px; margin-bottom: 15px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 210, 255, 0.3); color: var(--primary); font-family: 'Rajdhani', sans-serif; font-size: 1.1rem; border-radius: 2px; box-sizing: border-box; transition: 0.2s; }
         .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
         .input-field::placeholder { color: #505a75; }
-
         .spinner { width: 50px; height: 50px; border: 3px solid rgba(0, 210, 255, 0.1); border-top: 3px solid var(--primary); border-right: 3px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite, pulse-glow 2s infinite; margin: 30px auto; }
         #queue-message { font-size: 1.1rem; color: #a8b2d1; }
-
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 5px var(--primary-glow); } 50% { box-shadow: 0 0 20px var(--primary-glow); } }
         @keyframes glitch-anim { 0% { opacity: 0; transform: translateY(10px) skewX(5deg); filter: hue-rotate(90deg); } 50% { opacity: 0.8; transform: translateY(-5px) skewX(-5deg); filter: hue-rotate(-90deg); } 100% { opacity: 1; transform: translateY(0) skewX(0); filter: hue-rotate(0); } }
@@ -125,10 +61,7 @@
 <body>
 
 <div class="container">
-    <div class="brand-header">
-        <img src="logo.png" alt="JAC'S WIFI - MAX SPEED. NO LAG." class="brand-logo">
-    </div>
-
+    <div class="brand-header"><img src="logo.png" alt="JAC'S WIFI - MAX SPEED. NO LAG." class="brand-logo"></div>
     <div class="mac-display" id="mac-address-label">SYS_ID: UNKNOWN</div>
 
     <!-- SCREEN 1: LOADING & QUEUE -->
@@ -139,33 +72,23 @@
         <button class="btn-action btn-buy-more" id="btn-join-queue" style="display:none;" onclick="showScreen('screen-menu')">ACCESS NETWORK</button>
     </div>
 
-    <!-- SCREEN 2: RATE MENU -->
+    <!-- SCREEN 2: DYNAMIC RATE MENU -->
     <div id="screen-menu" class="screen">
         <h2>SELECT PROTOCOL</h2>
         <p style="font-size: 0.9rem; color: #8892b0;">Transfer credits to system admin upon selection.</p>
         
         <div class="tier-header">>> STD. BANDWIDTH [5MBPS]</div>
-        <div class="grid-menu">
-            <button class="btn-rate" onclick="requestPlan('1H_5M', 5)">1 Hour <span class="price">₱5</span></button>
-            <button class="btn-rate" onclick="requestPlan('3H_5M', 10)">3 Hours <span class="price">₱10</span></button>
-            <button class="btn-rate" onclick="requestPlan('10H_5M', 20)">10 Hours <span class="price">₱20</span></button>
-            <button class="btn-rate" onclick="requestPlan('1D_5M', 30)">24 Hours <span class="price">₱30</span></button>
-        </div>
+        <!-- INJECTED BY JAVASCRIPT -->
+        <div id="std-menu" class="grid-menu"></div>
 
         <div class="tier-header vip-header">>> OVERCLOCK [10MBPS]</div>
-        <div class="grid-menu" style="margin-bottom: 20px;">
-            <button class="btn-rate" onclick="requestPlan('3D_10M', 60)">3 Days <span class="price">₱60</span></button>
-            <button class="btn-rate" onclick="requestPlan('7D_10M', 130)">7 Days <span class="price">₱130</span></button>
-            <button class="btn-rate" onclick="requestPlan('15D_10M', 250)">15 Days <span class="price">₱250</span></button>
-            <button class="btn-rate" onclick="requestPlan('30D_10M', 450)">30 Days <span class="price">₱450</span></button>
-        </div>
+        <!-- INJECTED BY JAVASCRIPT -->
+        <div id="vip-menu" class="grid-menu" style="margin-bottom: 20px;"></div>
 
         <div id="credit-section" style="display: none;">
             <div class="tier-header credit-header">>> EMERGENCY UPLINK <<</div>
             <button id="btn-credit-request" class="btn-action" style="background: transparent; border: 1px solid var(--warning); color: var(--warning);">REQUEST 3 HRS CREDIT (₱10)</button>
         </div>
-
-        <!-- NEW: Allows users with active time to cancel out of the menu and return to the dashboard -->
         <button id="btn-back-dash" class="btn-action btn-buy-more" style="display:none; margin-top: 20px;" onclick="showScreen('screen-dashboard')">RETURN TO DASHBOARD</button>
     </div>
 
@@ -173,11 +96,9 @@
     <div id="screen-credit" class="screen">
         <h2 style="color: var(--warning); text-shadow: 0 0 10px rgba(255, 0, 60, 0.5);">CREDIT AUTH</h2>
         <p style="color: #8892b0; font-size: 0.9rem; margin-bottom: 20px;">Admin is currently AWAY. Enter details to activate a 3-hour emergency uplink. Pay ₱10 later.</p>
-        
         <input type="text" id="credit-name" class="input-field" placeholder="Full Name (Required)">
         <input type="text" id="credit-address" class="input-field" placeholder="Specific Address (Required)">
         <p id="credit-error" style="color: var(--warning); font-size: 0.9rem; display: none; font-weight: bold;"></p>
-        
         <button class="btn-action" style="background: var(--warning); color: white;" onclick="submitCredit()">ACTIVATE UPLINK</button>
         <button class="btn-action btn-buy-more" onclick="showScreen('screen-menu')">CANCEL</button>
     </div>
@@ -186,10 +107,8 @@
     <div id="screen-dashboard" class="screen">
         <h2>UPLINK STATUS</h2>
         <div id="status-badge" class="status-badge status-paused">OFFLINE</div>
-        
         <p id="time-label" style="color: #8892b0; margin-bottom: -10px; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; letter-spacing: 2px;">SYS. TIME REMAINING</p>
         <div class="time-display" id="time-remaining">00:00:00</div>
-
         <button class="btn-action btn-play" id="btn-play" onclick="toggleConnection('play')">ENGAGE UPLINK</button>
         <button class="btn-action btn-pause" id="btn-pause" onclick="toggleConnection('pause')" style="display:none;">SUSPEND UPLINK</button>
         <button class="btn-action btn-buy-more" onclick="showScreen('screen-menu')" style="margin-top: 15px;">AQUIRE MORE TIME</button>
@@ -199,10 +118,7 @@
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     let clientMac = urlParams.get('clientMac');
-    
-    if (!clientMac) {
-        clientMac = localStorage.getItem('saved_mac') || 'TEST-MAC-' + Math.floor(Math.random() * 1000);
-    }
+    if (!clientMac) { clientMac = localStorage.getItem('saved_mac') || 'TEST-MAC-' + Math.floor(Math.random() * 1000); }
     localStorage.setItem('saved_mac', clientMac);
     document.getElementById('mac-address-label').innerText = 'SYS_ID: ' + clientMac;
 
@@ -211,206 +127,123 @@
         document.getElementById(screenId).classList.add('active');
     }
 
+    let currentRatesString = '';
+
+    function renderRates(rates) {
+        const ratesJson = JSON.stringify(rates);
+        if (ratesJson === currentRatesString) return; 
+        currentRatesString = ratesJson;
+
+        let stdHtml = '';
+        let vipHtml = '';
+        for (let key in rates) {
+            let r = rates[key];
+            let btn = `<button class="btn-rate" onclick="requestPlan('${key}', ${r.p})">${r.n} <span class="price">₱${r.p}</span></button>`;
+            if (key.startsWith('std')) stdHtml += btn;
+            if (key.startsWith('vip')) vipHtml += btn;
+        }
+        document.getElementById('std-menu').innerHTML = stdHtml;
+        document.getElementById('vip-menu').innerHTML = vipHtml;
+    }
+
+    fetch('/api?action=get_rates').then(res => res.json()).then(rates => renderRates(rates));
+
     function requestPlan(planCode, price) {
-        showScreen('screen-queue');
-        document.getElementById('queue-title').innerText = 'ESTABLISHING...';
-        document.getElementById('queue-spinner').style.display = 'block';
-        document.getElementById('queue-message').innerText = `Requesting protocol ₱${price}...`;
-        
+        showScreen('screen-queue'); document.getElementById('queue-title').innerText = 'ESTABLISHING...'; document.getElementById('queue-spinner').style.display = 'block'; document.getElementById('queue-message').innerText = `Requesting protocol ₱${price}...`;
         fetch(`/api?action=join&mac=${clientMac}`)
             .then(() => fetch(`/api?action=request&mac=${clientMac}&plan=${planCode}`))
             .then(() => {
-                document.getElementById('queue-title').innerText = 'AWAITING AUTH';
-                document.getElementById('queue-spinner').style.display = 'none';
-                document.getElementById('queue-message').innerText = `Transfer ₱${price} to network admin.`;
+                document.getElementById('queue-title').innerText = 'AWAITING AUTH'; document.getElementById('queue-spinner').style.display = 'none'; document.getElementById('queue-message').innerText = `Transfer ₱${price} to network admin.`;
             });
     }
 
     function submitCredit() {
-        const name = document.getElementById('credit-name').value.trim();
-        const address = document.getElementById('credit-address').value.trim();
-        
-        if (!name || !address) {
-            document.getElementById('credit-error').innerText = "Name and Address are strictly required.";
-            document.getElementById('credit-error').style.display = "block";
-            return;
-        }
-        
-        document.getElementById('credit-error').style.display = "none";
-        showScreen('screen-queue');
-        document.getElementById('queue-title').innerText = 'ACQUIRING GPS...';
-        document.getElementById('queue-spinner').style.display = 'block';
-        document.getElementById('queue-message').innerText = 'Please allow location access on your device to verify credit request.';
-        
+        const name = document.getElementById('credit-name').value.trim(); const address = document.getElementById('credit-address').value.trim();
+        if (!name || !address) { document.getElementById('credit-error').innerText = "Name and Address are strictly required."; document.getElementById('credit-error').style.display = "block"; return; }
+        document.getElementById('credit-error').style.display = "none"; showScreen('screen-queue'); document.getElementById('queue-title').innerText = 'ACQUIRING GPS...'; document.getElementById('queue-spinner').style.display = 'block'; document.getElementById('queue-message').innerText = 'Please allow location access on your device to verify credit request.';
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    sendCreditAPI(name, address, lat, lng);
-                },
-                (error) => {
-                    showScreen('screen-credit');
-                    document.getElementById('credit-error').innerText = "SECURITY ALERT: You must tap 'Allow Location' to request an emergency uplink.";
-                    document.getElementById('credit-error').style.display = "block";
-                },
+                (position) => { sendCreditAPI(name, address, position.coords.latitude, position.coords.longitude); },
+                (error) => { showScreen('screen-credit'); document.getElementById('credit-error').innerText = "SECURITY ALERT: You must tap 'Allow Location' to request an emergency uplink."; document.getElementById('credit-error').style.display = "block"; },
                 { enableHighAccuracy: true, timeout: 15000 }
             );
-        } else {
-            showScreen('screen-credit');
-            document.getElementById('credit-error').innerText = "Your device does not support GPS location.";
-            document.getElementById('credit-error').style.display = "block";
-        }
+        } else { showScreen('screen-credit'); document.getElementById('credit-error').innerText = "Your device does not support GPS location."; document.getElementById('credit-error').style.display = "block"; }
     }
 
     function sendCreditAPI(name, address, lat, lng) {
-        document.getElementById('queue-title').innerText = 'AUTHORIZING...';
-        document.getElementById('queue-message').innerText = 'Processing emergency credit...';
-        
+        document.getElementById('queue-title').innerText = 'AUTHORIZING...'; document.getElementById('queue-message').innerText = 'Processing emergency credit...';
         fetch(`/api?action=request_credit&mac=${clientMac}&name=${encodeURIComponent(name)}&address=${encodeURIComponent(address)}&lat=${lat}&lng=${lng}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) {
-                    showScreen('screen-credit');
-                    document.getElementById('credit-error').innerText = data.error;
-                    document.getElementById('credit-error').style.display = "block";
-                }
-            });
+            .then(res => res.json()).then(data => { if (data.error) { showScreen('screen-credit'); document.getElementById('credit-error').innerText = data.error; document.getElementById('credit-error').style.display = "block"; } });
     }
 
     function toggleConnection(action) {
         if (action === 'play') {
-            document.getElementById('btn-play').style.display = 'none';
-            document.getElementById('btn-pause').style.display = 'block';
-            document.getElementById('status-badge').className = 'status-badge status-playing';
-            document.getElementById('status-badge').innerText = 'ACTIVE';
+            document.getElementById('btn-play').style.display = 'none'; document.getElementById('btn-pause').style.display = 'block'; document.getElementById('status-badge').className = 'status-badge status-playing'; document.getElementById('status-badge').innerText = 'ACTIVE';
             fetch(`/api?action=play&mac=${clientMac}`);
         } else {
-            document.getElementById('btn-pause').style.display = 'none';
-            document.getElementById('btn-play').style.display = 'block';
-            document.getElementById('status-badge').className = 'status-badge status-paused';
-            document.getElementById('status-badge').innerText = 'SUSPENDED';
+            document.getElementById('btn-pause').style.display = 'none'; document.getElementById('btn-play').style.display = 'block'; document.getElementById('status-badge').className = 'status-badge status-paused'; document.getElementById('status-badge').innerText = 'SUSPENDED';
             fetch(`/api?action=pause&mac=${clientMac}`);
         }
     }
 
-    let sessionEndTime = null;
-    let cachedSecondsLeft = 0;
-    let isPlaying = false;
-
+    let sessionEndTime = null; let cachedSecondsLeft = 0; let isPlaying = false;
     setInterval(() => {
         let displaySeconds = 0;
-        if (isPlaying && sessionEndTime) {
-            displaySeconds = Math.floor((sessionEndTime - Date.now()) / 1000);
-        } else {
-            displaySeconds = cachedSecondsLeft;
-        }
-
+        if (isPlaying && sessionEndTime) { displaySeconds = Math.floor((sessionEndTime - Date.now()) / 1000); } else { displaySeconds = cachedSecondsLeft; }
         if (displaySeconds < 0) displaySeconds = 0;
-
-        const days = Math.floor(displaySeconds / 86400);
-        const hours = Math.floor((displaySeconds % 86400) / 3600);
-        const mins = Math.floor((displaySeconds % 3600) / 60);
-        const secs = displaySeconds % 60;
-
-        const timeLabel = document.getElementById('time-label');
-        const timeDisplay = document.getElementById('time-remaining');
+        const days = Math.floor(displaySeconds / 86400); const hours = Math.floor((displaySeconds % 86400) / 3600); const mins = Math.floor((displaySeconds % 3600) / 60); const secs = displaySeconds % 60;
+        const timeLabel = document.getElementById('time-label'); const timeDisplay = document.getElementById('time-remaining');
         if (!timeLabel || !timeDisplay) return;
-
-        if (days > 0) {
-            timeLabel.innerText = "SYS. TIME REMAINING";
-            timeDisplay.style.fontSize = "1.5rem";
-            timeDisplay.innerText = `${days} DAYS, ${hours} HRS and ${mins} MINS`;
-        } else {
-            timeLabel.innerText = "SYS. TIME (HRS : MIN : SEC)";
-            timeDisplay.style.fontSize = "2.8rem";
-            timeDisplay.innerText = String(hours).padStart(2, '0') + ':' + String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
-        }
+        if (days > 0) { timeLabel.innerText = "SYS. TIME REMAINING"; timeDisplay.style.fontSize = "1.5rem"; timeDisplay.innerText = `${days} DAYS, ${hours} HRS and ${mins} MINS`; } 
+        else { timeLabel.innerText = "SYS. TIME (HRS : MIN : SEC)"; timeDisplay.style.fontSize = "2.8rem"; timeDisplay.innerText = String(hours).padStart(2, '0') + ':' + String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0'); }
     }, 1000);
 
-    // 3-Second Background Database Poller
     setInterval(() => {
         fetch(`/api?action=status&mac=${clientMac}`)
             .then(res => res.json())
             .then(data => {
                 
-                const creditSec = document.getElementById('credit-section');
-                const creditBtn = document.getElementById('btn-credit-request');
-                
+                if (data.rates) renderRates(data.rates);
+
+                const creditSec = document.getElementById('credit-section'); const creditBtn = document.getElementById('btn-credit-request');
                 if (creditSec && creditBtn) {
                     creditSec.style.display = data.credit_enabled === 'true' ? 'block' : 'none';
                     if (data.eligible) {
-                        creditBtn.onclick = () => showScreen('screen-credit');
-                        creditBtn.style.opacity = '1';
-                        creditBtn.style.borderColor = 'var(--warning)';
-                        creditBtn.innerText = 'REQUEST 3 HRS CREDIT (₱10)';
+                        creditBtn.onclick = () => showScreen('screen-credit'); creditBtn.style.opacity = '1'; creditBtn.style.borderColor = 'var(--warning)'; creditBtn.innerText = 'REQUEST 3 HRS CREDIT (₱10)';
                     } else {
-                        creditBtn.onclick = () => alert('🔒 LOYALTY REWARD LOCKED\n\nYou must purchase a Wi-Fi plan at least 3 times to unlock the Emergency Credit feature. Thank you for your support!');
-                        creditBtn.style.opacity = '0.4';
-                        creditBtn.style.borderColor = '#555';
-                        creditBtn.innerText = '🔒 CREDIT LOCKED (NEEDS 3 PURCHASES)';
+                        creditBtn.onclick = () => alert('🔒 LOYALTY REWARD LOCKED\n\nYou must purchase a Wi-Fi plan at least 3 times to unlock the Emergency Credit feature. Thank you for your support!'); creditBtn.style.opacity = '0.4'; creditBtn.style.borderColor = '#555'; creditBtn.innerText = '🔒 CREDIT LOCKED (NEEDS 3 PURCHASES)';
                     }
                 }
+                if (data.credit_enabled !== 'true' && document.getElementById('screen-credit').classList.contains('active')) { showScreen('screen-menu'); }
 
                 if (data.type === 'dashboard') {
-                    // Reveal the 'Return to Dashboard' button on the menu
-                    const backBtn = document.getElementById('btn-back-dash');
-                    if (backBtn) backBtn.style.display = 'block';
-
-                    // ONLY auto-switch to Dashboard if they aren't deliberately browsing the menu
-                    if (!document.getElementById('screen-menu').classList.contains('active') && 
-                        !document.getElementById('screen-credit').classList.contains('active')) {
-                        showScreen('screen-dashboard');
-                    }
-
+                    const backBtn = document.getElementById('btn-back-dash'); if (backBtn) backBtn.style.display = 'block';
+                    if (!document.getElementById('screen-menu').classList.contains('active') && !document.getElementById('screen-credit').classList.contains('active')) { showScreen('screen-dashboard'); }
                     const session = data.data;
                     if (session.status === 'playing') {
-                        const startTime = new Date(session.last_play_time + 'Z').getTime();
-                        const secondsPlayed = Math.floor((Date.now() - startTime) / 1000);
-                        cachedSecondsLeft = (session.total_minutes_bought * 60) - (session.minutes_used * 60) - secondsPlayed;
-                        sessionEndTime = Date.now() + (cachedSecondsLeft * 1000);
-                        isPlaying = true;
-
-                        document.getElementById('status-badge').className = 'status-badge status-playing';
-                        document.getElementById('status-badge').innerText = 'UPLINK ACTIVE';
-                        document.getElementById('btn-play').style.display = 'none';
-                        document.getElementById('btn-pause').style.display = 'block';
+                        const startTime = new Date(session.last_play_time + 'Z').getTime(); const secondsPlayed = Math.floor((Date.now() - startTime) / 1000);
+                        cachedSecondsLeft = (session.total_minutes_bought * 60) - (session.minutes_used * 60) - secondsPlayed; sessionEndTime = Date.now() + (cachedSecondsLeft * 1000); isPlaying = true;
+                        document.getElementById('status-badge').className = 'status-badge status-playing'; document.getElementById('status-badge').innerText = 'UPLINK ACTIVE'; document.getElementById('btn-play').style.display = 'none'; document.getElementById('btn-pause').style.display = 'block';
                     } else {
-                        cachedSecondsLeft = (session.total_minutes_bought * 60) - (session.minutes_used * 60);
-                        isPlaying = false;
-
-                        document.getElementById('status-badge').className = 'status-badge status-paused';
-                        document.getElementById('status-badge').innerText = 'SUSPENDED';
-                        document.getElementById('btn-pause').style.display = 'none';
-                        document.getElementById('btn-play').style.display = 'block';
+                        cachedSecondsLeft = (session.total_minutes_bought * 60) - (session.minutes_used * 60); isPlaying = false;
+                        document.getElementById('status-badge').className = 'status-badge status-paused'; document.getElementById('status-badge').innerText = 'SUSPENDED'; document.getElementById('btn-pause').style.display = 'none'; document.getElementById('btn-play').style.display = 'block';
                     }
                 } 
                 else if (data.type === 'queue') {
                     if (!data.data.requested_plan) {
-                        if (!document.getElementById('screen-menu').classList.contains('active') && !document.getElementById('screen-credit').classList.contains('active')) {
-                            showScreen('screen-menu');
-                        }
+                        if (!document.getElementById('screen-menu').classList.contains('active') && !document.getElementById('screen-credit').classList.contains('active')) { showScreen('screen-menu'); }
                     } else {
                         if (!document.getElementById('screen-dashboard').classList.contains('active')) {
-                            showScreen('screen-queue');
-                            document.getElementById('queue-title').innerText = 'AWAITING AUTH';
-                            document.getElementById('queue-spinner').style.display = 'none';
-                            document.getElementById('queue-message').innerText = `Queue position: #${data.position}. Awaiting payment confirmation.`;
-                            document.getElementById('btn-join-queue').style.display = 'none';
+                            showScreen('screen-queue'); document.getElementById('queue-title').innerText = 'AWAITING AUTH'; document.getElementById('queue-spinner').style.display = 'none'; document.getElementById('queue-message').innerText = `Queue position: #${data.position}. Awaiting payment confirmation.`; document.getElementById('btn-join-queue').style.display = 'none';
                         }
                     }
                 } 
                 else {
                     if (!document.getElementById('screen-menu').classList.contains('active') && !document.getElementById('screen-credit').classList.contains('active')) {
-                        showScreen('screen-queue');
-                        document.getElementById('queue-title').innerText = 'SYSTEM READY';
-                        document.getElementById('queue-spinner').style.display = 'none';
-                        document.getElementById('queue-message').innerText = 'Select to view available protocols.';
-                        document.getElementById('btn-join-queue').style.display = 'block';
+                        showScreen('screen-queue'); document.getElementById('queue-title').innerText = 'SYSTEM READY'; document.getElementById('queue-spinner').style.display = 'none'; document.getElementById('queue-message').innerText = 'Select to view available protocols.'; document.getElementById('btn-join-queue').style.display = 'block';
                     }
                 }
-            })
-            .catch(err => console.error("API Error:", err));
+            }).catch(err => console.error("API Error:", err));
     }, 3000);
 </script>
 
