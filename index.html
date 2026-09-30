@@ -32,6 +32,7 @@
         .btn-rate:hover { border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); background: rgba(0, 210, 255, 0.05); transform: translateY(-2px); }
         .btn-rate:active { background: var(--primary); color: var(--dark); transform: translateY(0); }
         .price { color: var(--primary); font-size: 1.3rem; display: block; margin-top: 5px; font-family: 'Orbitron', sans-serif; font-weight: 900; }
+        .val-text { font-size: 0.7rem; color: #8892b0; display: block; margin-top: 5px; font-weight: normal; font-family: 'Rajdhani', sans-serif; text-transform: none; }
         .vip-header + .grid-menu .price { color: var(--secondary); }
         .vip-header + .grid-menu .btn-rate:hover { border-color: var(--secondary); box-shadow: 0 0 15px var(--secondary-glow); background: rgba(255, 140, 0, 0.05); }
         .vip-header + .grid-menu .btn-rate:active { background: var(--secondary); color: var(--dark); }
@@ -78,11 +79,9 @@
         <p style="font-size: 0.9rem; color: #8892b0;">Transfer credits to system admin upon selection.</p>
         
         <div class="tier-header">>> STD. BANDWIDTH [5MBPS]</div>
-        <!-- INJECTED BY JAVASCRIPT -->
         <div id="std-menu" class="grid-menu"></div>
 
         <div class="tier-header vip-header">>> OVERCLOCK [10MBPS]</div>
-        <!-- INJECTED BY JAVASCRIPT -->
         <div id="vip-menu" class="grid-menu" style="margin-bottom: 20px;"></div>
 
         <div id="credit-section" style="display: none;">
@@ -108,7 +107,12 @@
         <h2>UPLINK STATUS</h2>
         <div id="status-badge" class="status-badge status-paused">OFFLINE</div>
         <p id="time-label" style="color: #8892b0; margin-bottom: -10px; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; letter-spacing: 2px;">SYS. TIME REMAINING</p>
+        
         <div class="time-display" id="time-remaining">00:00:00</div>
+        
+        <!-- NEW: Expiration Indicator Display -->
+        <div id="expiry-badge" style="color: var(--warning); font-size: 0.85rem; font-weight: bold; margin-bottom: 15px; font-family: 'Rajdhani', sans-serif;"></div>
+
         <button class="btn-action btn-play" id="btn-play" onclick="toggleConnection('play')">ENGAGE UPLINK</button>
         <button class="btn-action btn-pause" id="btn-pause" onclick="toggleConnection('pause')" style="display:none;">SUSPEND UPLINK</button>
         <button class="btn-action btn-buy-more" onclick="showScreen('screen-menu')" style="margin-top: 15px;">AQUIRE MORE TIME</button>
@@ -138,7 +142,11 @@
         let vipHtml = '';
         for (let key in rates) {
             let r = rates[key];
-            let btn = `<button class="btn-rate" onclick="requestPlan('${key}', ${r.p})">${r.n} <span class="price">₱${r.p}</span></button>`;
+            let valHrs = r.v || 24;
+            let valText = valHrs >= 24 ? Math.floor(valHrs/24) + ' Days' : valHrs + ' Hrs';
+            
+            let btn = `<button class="btn-rate" onclick="requestPlan('${key}', ${r.p})">${r.n} <span class="price">₱${r.p}</span><span class="val-text">Valid for ${valText}</span></button>`;
+            
             if (key.startsWith('std')) stdHtml += btn;
             if (key.startsWith('vip')) vipHtml += btn;
         }
@@ -146,7 +154,7 @@
         document.getElementById('vip-menu').innerHTML = vipHtml;
     }
 
-    fetch('/api?action=get_rates').then(res => res.json()).then(rates => renderRates(rates));
+    fetch('/api?action=get_rates').then(res => res.json()).then(rates => { if (!rates.error) renderRates(rates); });
 
     function requestPlan(planCode, price) {
         showScreen('screen-queue'); document.getElementById('queue-title').innerText = 'ESTABLISHING...'; document.getElementById('queue-spinner').style.display = 'block'; document.getElementById('queue-message').innerText = `Requesting protocol ₱${price}...`;
@@ -179,7 +187,9 @@
     function toggleConnection(action) {
         if (action === 'play') {
             document.getElementById('btn-play').style.display = 'none'; document.getElementById('btn-pause').style.display = 'block'; document.getElementById('status-badge').className = 'status-badge status-playing'; document.getElementById('status-badge').innerText = 'ACTIVE';
-            fetch(`/api?action=play&mac=${clientMac}`);
+            fetch(`/api?action=play&mac=${clientMac}`).then(res => res.json()).then(data => {
+                if (data.error) { alert("ERROR: Time has expired or reached zero."); }
+            });
         } else {
             document.getElementById('btn-pause').style.display = 'none'; document.getElementById('btn-play').style.display = 'block'; document.getElementById('status-badge').className = 'status-badge status-paused'; document.getElementById('status-badge').innerText = 'SUSPENDED';
             fetch(`/api?action=pause&mac=${clientMac}`);
@@ -203,7 +213,7 @@
             .then(res => res.json())
             .then(data => {
                 
-                if (data.rates) renderRates(data.rates);
+                if (data.rates && !data.rates.error) renderRates(data.rates);
 
                 const creditSec = document.getElementById('credit-section'); const creditBtn = document.getElementById('btn-credit-request');
                 if (creditSec && creditBtn) {
@@ -219,7 +229,18 @@
                 if (data.type === 'dashboard') {
                     const backBtn = document.getElementById('btn-back-dash'); if (backBtn) backBtn.style.display = 'block';
                     if (!document.getElementById('screen-menu').classList.contains('active') && !document.getElementById('screen-credit').classList.contains('active')) { showScreen('screen-dashboard'); }
+                    
                     const session = data.data;
+                    
+                    // Display the Expiration Date locally
+                    const expBadge = document.getElementById('expiry-badge');
+                    if (session.expires_at) {
+                        const expDate = new Date(session.expires_at);
+                        expBadge.innerText = 'VOUCHER EXPIRES: ' + expDate.toLocaleString();
+                    } else {
+                        expBadge.innerText = '';
+                    }
+
                     if (session.status === 'playing') {
                         const startTime = new Date(session.last_play_time + 'Z').getTime(); const secondsPlayed = Math.floor((Date.now() - startTime) / 1000);
                         cachedSecondsLeft = (session.total_minutes_bought * 60) - (session.minutes_used * 60) - secondsPlayed; sessionEndTime = Date.now() + (cachedSecondsLeft * 1000); isPlaying = true;
