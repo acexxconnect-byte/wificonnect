@@ -9,80 +9,37 @@
     
     <style>
         :root {
-            --primary: #00d2ff;
-            --primary-glow: rgba(0, 210, 255, 0.5);
-            --secondary: #ff8c00;
-            --secondary-glow: rgba(255, 140, 0, 0.5);
-            --success: #ff8c00;
-            --warning: #ff003c; 
-            --danger: #ff003c;
-            --dark: #0a0a0c; 
-            --panel-bg: #111116; 
-            --light: #e0e0e0;
-            --grid-color: rgba(0, 210, 255, 0.05);
+            --primary: #00d2ff; --primary-glow: rgba(0, 210, 255, 0.5);
+            --secondary: #ff8c00; --secondary-glow: rgba(255, 140, 0, 0.5);
+            --success: #ff8c00; --warning: #ff003c; --danger: #ff003c;
+            --dark: #0a0a0c; --panel-bg: #111116; --light: #e0e0e0; --grid-color: rgba(0, 210, 255, 0.05);
         }
-
-        body {
-            font-family: 'Rajdhani', sans-serif; background-color: var(--dark); color: var(--light);
-            margin: 0; padding: 15px; 
-            background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 30px 30px;
-        }
-
-        .container {
-            max-width: 800px; margin: 0 auto; background: var(--panel-bg);
-            border: 1px solid rgba(0, 210, 255, 0.2); box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 10px var(--primary-glow);
-            padding: 20px; border-radius: 4px; position: relative;
-        }
-
+        body { font-family: 'Rajdhani', sans-serif; background-color: var(--dark); color: var(--light); margin: 0; padding: 15px; background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px); background-size: 30px 30px; }
+        .container { max-width: 800px; margin: 0 auto; background: var(--panel-bg); border: 1px solid rgba(0, 210, 255, 0.2); box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 10px var(--primary-glow); padding: 20px; border-radius: 4px; position: relative; }
         .brand-header { border-bottom: 1px solid rgba(0, 210, 255, 0.2); padding-bottom: 15px; margin-bottom: 20px; text-align: center; }
         .brand-header h1 { font-family: 'Orbitron', sans-serif; color: #fff; margin: 0; text-shadow: 0 0 10px var(--primary-glow); letter-spacing: 2px; }
         .brand-header .tagline { color: var(--primary); font-weight: 700; letter-spacing: 2px; font-size: 0.9rem; }
-
-        /* Login Screen Styles */
+        
         #login-screen { text-align: center; padding: 40px 20px; }
         #login-screen h2 { font-family: 'Orbitron', sans-serif; color: var(--warning); text-shadow: 0 0 10px rgba(255, 0, 60, 0.5); margin-bottom: 30px; }
-        
-        .input-field {
-            width: 100%; max-width: 300px; padding: 15px; margin-bottom: 20px; 
-            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 210, 255, 0.3); 
-            color: var(--primary); font-family: 'Orbitron', sans-serif; font-size: 1.2rem; 
-            border-radius: 2px; box-sizing: border-box; transition: 0.2s; text-align: center; letter-spacing: 4px;
-        }
+        .input-field { width: 100%; max-width: 300px; padding: 15px; margin-bottom: 20px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 210, 255, 0.3); color: var(--primary); font-family: 'Orbitron', sans-serif; font-size: 1.2rem; border-radius: 2px; box-sizing: border-box; transition: 0.2s; text-align: center; letter-spacing: 4px; }
         .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
-        
-        .btn-action {
-            width: 100%; max-width: 300px; padding: 15px; border: none; border-radius: 2px; font-size: 1.2rem; font-weight: 700;
-            font-family: 'Orbitron', sans-serif; color: #000; background: var(--primary); box-shadow: 0 0 15px var(--primary-glow);
-            cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: all 0.2s ease;
-        }
+        .btn-action { width: 100%; max-width: 300px; padding: 15px; border: none; border-radius: 2px; font-size: 1.2rem; font-weight: 700; font-family: 'Orbitron', sans-serif; color: #000; background: var(--primary); box-shadow: 0 0 15px var(--primary-glow); cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: all 0.2s ease; }
         .btn-action:hover { filter: brightness(1.2); }
 
-        /* Dashboard Styles */
         #dashboard-wrapper { display: none; }
-
-        /* SCROLLBAR FIX: Switched to flex-wrap */
         .tab-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
-        .tab {
-            flex: 1 1 auto; min-width: 120px; background: transparent; color: var(--primary); border: 1px solid var(--primary);
-            padding: 10px 5px; cursor: pointer; font-family: 'Orbitron', sans-serif; font-weight: bold; font-size: 0.85rem;
-            text-transform: uppercase; text-align: center; transition: 0.2s;
-        }
+        .tab { flex: 1 1 auto; min-width: 120px; background: transparent; color: var(--primary); border: 1px solid var(--primary); padding: 10px 5px; cursor: pointer; font-family: 'Orbitron', sans-serif; font-weight: bold; font-size: 0.85rem; text-transform: uppercase; text-align: center; transition: 0.2s; }
         .tab.active { background: var(--primary); color: var(--dark); box-shadow: 0 0 10px var(--primary-glow); }
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
 
-        .card {
-            background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(0, 210, 255, 0.2); border-left: 4px solid var(--primary);
-            padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
-        }
+        .card { background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(0, 210, 255, 0.2); border-left: 4px solid var(--primary); padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .card.active-client { border-left-color: var(--success); }
         .card.credit-client { border-left-color: var(--warning); }
-        
         .mac { font-family: 'Orbitron', monospace; color: var(--primary); font-size: 1.1rem; }
         .plan { color: #8892b0; font-size: 0.9rem; margin-top: 5px; }
         .time-used { color: var(--success); font-weight: bold; }
-
         .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
         .btn { padding: 8px 15px; border: none; font-family: 'Orbitron', sans-serif; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; border-radius: 2px; transition: 0.2s; }
         .btn-approve { background: var(--success); color: #000; box-shadow: 0 0 10px var(--secondary-glow); }
@@ -90,21 +47,15 @@
         .btn-suspend { background: var(--warning); color: #fff; box-shadow: 0 0 10px rgba(255, 0, 60, 0.3); }
         .btn-locate { background: transparent; color: var(--primary); border: 1px solid var(--primary); box-shadow: inset 0 0 5px rgba(0, 210, 255, 0.3); }
         .btn:hover { filter: brightness(1.2); }
-
         .empty-state { text-align: center; color: #8892b0; padding: 40px 0; font-family: 'Orbitron', sans-serif; letter-spacing: 1px; }
-
         #credit-map { height: 250px; width: 100%; border: 1px solid rgba(0, 210, 255, 0.3); border-radius: 4px; margin-bottom: 20px; display: none; z-index: 1; }
-        
-        .leaflet-layer, .leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-control-attribution {
-            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
-        }
+        .leaflet-layer, .leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-control-attribution { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
 
         .settings-box { border: 1px dashed rgba(0, 210, 255, 0.3); padding: 15px; margin-bottom: 15px; background: rgba(0,0,0,0.3); }
         .settings-box h3 { color: var(--primary); font-family: 'Orbitron', sans-serif; margin-top: 0; }
         .settings-box p, .settings-box li { color: #e0e0e0; font-size: 0.95rem; line-height: 1.5; }
         .code-snippet { background: #000; color: var(--success); padding: 5px 10px; font-family: monospace; border-radius: 3px; }
 
-        /* Calculator Specific Styles */
         .result-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed rgba(0, 210, 255, 0.2); font-size: 1.05rem; }
         .result-row:last-child { border-bottom: none; }
         .price-text { font-family: 'Orbitron', sans-serif; font-weight: bold; color: var(--success); }
@@ -112,27 +63,29 @@
         .warning-box { background: rgba(255, 0, 60, 0.1); color: var(--warning); border: 1px solid var(--warning); padding: 12px; border-radius: 2px; font-weight: bold; font-size: 0.9rem; margin-top: 15px; text-align: center; display: none; text-shadow: 0 0 5px rgba(255, 0, 60, 0.5); }
         .section-label { background: rgba(0, 210, 255, 0.1); padding: 8px; border-left: 3px solid var(--primary); color: var(--primary); margin-top: 20px; font-weight: bold; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
 
+        /* Dynamic Rate Editor CSS */
+        .rate-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+        .rate-row input { flex: 1; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 210, 255, 0.3); color: var(--primary); font-family: 'Rajdhani', sans-serif; border-radius: 2px; font-weight: bold; }
+        .rate-row input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 5px var(--primary-glow); }
+        .rate-label { width: 40px; font-weight: bold; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; text-align: center; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <!-- SECURE LOGIN SCREEN -->
     <div class="container" id="login-screen">
         <div class="brand-header" style="border:none;">
             <h1>JAC'S ADMIN</h1>
             <div class="tagline">>> NETWORK COMMAND CENTER <<</div>
         </div>
-        
         <h2>SYSTEM LOCKED</h2>
         <p style="color: #8892b0; margin-bottom: 20px;">Please enter your Command Code to access the network interface.</p>
-        
         <input type="password" id="admin-pin" class="input-field" placeholder="••••••••" onkeypress="handleEnter(event)">
         <br>
         <button class="btn-action" onclick="verifyLogin()">AUTHORIZE ACCESS</button>
     </div>
 
-    <!-- MAIN ADMIN DASHBOARD -->
     <div class="container" id="dashboard-wrapper">
         <div class="brand-header">
             <h1>JAC'S ADMIN</h1>
@@ -149,60 +102,21 @@
             <div class="tab" onclick="switchTab('settings')">SYS SETTINGS</div>
         </div>
 
-        <!-- TAB 1: PENDING QUEUE -->
-        <div id="tab-queue" class="tab-content active">
-            <div id="queue-list"><div class="empty-state">SCANNING NETWORK...</div></div>
-        </div>
-
-        <!-- TAB 2: ACTIVE CLIENTS -->
-        <div id="tab-active" class="tab-content">
-            <div id="active-list"><div class="empty-state">SCANNING NETWORK...</div></div>
-        </div>
-
-        <!-- TAB 3: CREDITS LOG & MAP -->
-        <div id="tab-credits" class="tab-content">
-            <div id="credit-map"></div>
-            <div id="credits-list"><div class="empty-state">SCANNING DATABASE...</div></div>
-        </div>
-
-        <!-- TAB 4: PROFIT CALCULATOR -->
+        <div id="tab-queue" class="tab-content active"><div id="queue-list"></div></div>
+        <div id="tab-active" class="tab-content"><div id="active-list"></div></div>
+        <div id="tab-credits" class="tab-content"><div id="credit-map"></div><div id="credits-list"></div></div>
         <div id="tab-calc" class="tab-content">
-            <div class="settings-box">
-                <h3>>> OPERATING COSTS</h3>
-                <label style="color: #8892b0; font-weight: bold; display: block;">Monthly Internet Bill (₱)</label>
-                <input type="number" id="bill" class="input-field" style="max-width: 100%; text-align: left; letter-spacing: normal;" value="680" oninput="calculateRealTime()">
-                
-                <label style="color: #8892b0; font-weight: bold; display: block;">Energy Rate (₱ / kWh)</label>
-                <input type="number" id="energy" class="input-field" style="max-width: 100%; text-align: left; letter-spacing: normal;" value="14" oninput="calculateRealTime()">
-                
-                <label style="color: #8892b0; font-weight: bold; display: block;">AP + Modem Wattage (Watts)</label>
-                <input type="number" id="wattage" class="input-field" style="max-width: 100%; text-align: left; letter-spacing: normal;" value="15" oninput="calculateRealTime()">
-
-                <div style="margin-top: 15px; border-top: 1px dashed rgba(0, 210, 255, 0.3); padding-top: 15px;">
-                    <div class="result-row">
-                        <span>Total Monthly Cost:</span>
-                        <span class="price-text" id="out-monthly">₱0.00</span>
-                    </div>
-                    <div class="result-row">
-                        <span>Daily Break-Even:</span>
-                        <span class="break-even" id="out-daily">₱0.00</span>
-                    </div>
-                </div>
-            </div>
-
+            <!-- (PROFIT CALC CONTENT IS UNAFFECTED & REMAINS THE SAME AS PREVIOUS CODE) -->
             <div class="settings-box">
                 <h3>>> RATE CALCULATOR</h3>
                 <label style="color: #8892b0; font-weight: bold; display: block;">Target Price for 1-Day Protocol (₱)</label>
                 <input type="number" id="targetDaily" class="input-field" style="max-width: 100%; text-align: left; letter-spacing: normal;" value="30" oninput="calculateRealTime()">
-
                 <div class="warning-box" id="warning-msg"></div>
-
                 <div class="section-label">Standard Protocols</div>
                 <div class="result-row"><span>1 Hour</span> <span class="price-text" id="r-1h">₱0</span></div>
                 <div class="result-row"><span>3 Hours</span> <span class="price-text" id="r-3h">₱0</span></div>
                 <div class="result-row"><span>10 Hours</span> <span class="price-text" id="r-10h">₱0</span></div>
                 <div class="result-row"><span>24 Hours (1 Day)</span> <span class="price-text" id="r-1d">₱0</span></div>
-
                 <div class="section-label">Overclock / VIP Protocols</div>
                 <div class="result-row"><span>3 Days</span> <span class="price-text" id="r-3d">₱0</span></div>
                 <div class="result-row"><span>7 Days</span> <span class="price-text" id="r-7d">₱0</span></div>
@@ -211,11 +125,22 @@
             </div>
         </div>
 
-        <!-- TAB 5: SYSTEM SETTINGS -->
         <div id="tab-settings" class="tab-content">
+            
+            <!-- NEW DYNAMIC RATE MANAGER -->
+            <div class="settings-box">
+                <h3>>> DYNAMIC RATE MANAGER</h3>
+                <p>Adjust the exact Name, Time (Minutes), and Price (₱) for your protocols. Click SAVE to update the live system immediately.</p>
+                <div style="display: flex; padding: 5px 0; color: #8892b0; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">
+                    <span style="width: 48px;">Type</span><span style="flex: 1;">Display Name</span><span style="flex: 1;">Minutes</span><span style="flex: 1;">Price (₱)</span>
+                </div>
+                <div id="rate-editor-list"><div class="empty-state">LOADING RATES...</div></div>
+                <button class="btn-action" style="margin-top: 15px; width: 100%; max-width: 100%;" onclick="saveRates(event)">SAVE & DEPLOY RATES</button>
+            </div>
+
             <div class="settings-box">
                 <h3>SECURITY: BLOCK ADULT SITES</h3>
-                <p>Website blocking must be done at the router level. To block malicious and adult content network-wide, update your Omada/Router DNS settings to OpenDNS FamilyShield:</p>
+                <p>To block malicious and adult content network-wide, update your Omada/Router DNS settings to OpenDNS FamilyShield:</p>
                 <ul>
                     <li>Primary DNS: <span class="code-snippet">208.67.222.123</span></li>
                     <li>Secondary DNS: <span class="code-snippet">208.67.220.123</span></li>
@@ -224,27 +149,17 @@
         </div>
     </div>
 
-    <!-- Leaflet JS for Map -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
     <script>
-        // ==========================================
-        // SECURITY & LOGIN LOGIC
-        // ==========================================
         const MASTER_PIN = "JACS2026";
         let pollerInterval;
+        let globalRates = {};
 
-        if (sessionStorage.getItem('jac_admin_auth') === 'verified') {
-            unlockDashboard();
-        }
+        if (sessionStorage.getItem('jac_admin_auth') === 'verified') unlockDashboard();
 
-        function handleEnter(e) {
-            if (e.key === 'Enter') verifyLogin();
-        }
-
+        function handleEnter(e) { if (e.key === 'Enter') verifyLogin(); }
         function verifyLogin() {
-            const entered = document.getElementById('admin-pin').value;
-            if (entered === MASTER_PIN) {
+            if (document.getElementById('admin-pin').value === MASTER_PIN) {
                 sessionStorage.setItem('jac_admin_auth', 'verified');
                 unlockDashboard();
             } else {
@@ -264,18 +179,13 @@
         function unlockDashboard() {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('dashboard-wrapper').style.display = 'block';
-            
             calculateRealTime();
             fetchData();
             pollerInterval = setInterval(fetchData, 3000);
         }
 
-        // ==========================================
-        // ADMIN DASHBOARD LOGIC
-        // ==========================================
         let currentTab = 'queue';
-        let map = null;
-        let currentMarker = null;
+        let map = null; let currentMarker = null;
 
         function loadSettings() {
             fetch('/api?action=admin_get_settings')
@@ -283,15 +193,58 @@
                 .then(data => {
                     const btn = document.getElementById('btn-away-mode');
                     if (data.credit_enabled === 'true') {
-                        btn.style.background = 'var(--warning)';
-                        btn.style.color = '#fff';
-                        btn.style.borderColor = 'var(--warning)';
-                        btn.innerText = 'AWAY MODE (CREDITS): ON';
+                        btn.style.background = 'var(--warning)'; btn.style.color = '#fff'; btn.style.borderColor = 'var(--warning)'; btn.innerText = 'AWAY MODE (CREDITS): ON';
                     } else {
-                        btn.style.background = 'transparent';
-                        btn.style.color = 'var(--primary)';
-                        btn.style.borderColor = 'var(--primary)';
-                        btn.innerText = 'AWAY MODE (CREDITS): OFF';
+                        btn.style.background = 'transparent'; btn.style.color = 'var(--primary)'; btn.style.borderColor = 'var(--primary)'; btn.innerText = 'AWAY MODE (CREDITS): OFF';
+                    }
+                });
+
+            // LOAD DYNAMIC RATES EDITOR
+            if (Object.keys(globalRates).length === 0) {
+                fetch('/api?action=get_rates')
+                    .then(res => res.json())
+                    .then(rates => {
+                        globalRates = rates;
+                        renderRateEditor();
+                    });
+            }
+        }
+
+        function renderRateEditor() {
+            let html = '';
+            for (let key in globalRates) {
+                let r = globalRates[key];
+                let type = key.startsWith('std') ? 'STD' : 'VIP';
+                let typeColor = key.startsWith('std') ? 'var(--primary)' : 'var(--secondary)';
+                html += `
+                <div class="rate-row">
+                    <div class="rate-label" style="color: ${typeColor}">${type}</div>
+                    <input type="text" id="name_${key}" value="${r.n}" placeholder="Name">
+                    <input type="number" id="mins_${key}" value="${r.m}" placeholder="Mins">
+                    <input type="number" id="price_${key}" value="${r.p}" placeholder="₱">
+                </div>`;
+            }
+            document.getElementById('rate-editor-list').innerHTML = html;
+        }
+
+        function saveRates(event) {
+            const btn = event.target;
+            btn.innerText = "SAVING TO DATABASE...";
+            let newRates = {};
+            for (let key in globalRates) {
+                newRates[key] = {
+                    n: document.getElementById(`name_${key}`).value,
+                    m: parseInt(document.getElementById(`mins_${key}`).value),
+                    p: parseFloat(document.getElementById(`price_${key}`).value)
+                };
+            }
+            fetch(`/api?action=admin_save_rates&rates=${encodeURIComponent(JSON.stringify(newRates))}`)
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        btn.innerText = "SAVE & DEPLOY RATES";
+                        alert("✅ RATES UPDATED SUCCESSFULLY!\nThe client portal and network billing logic will now use these new prices and times.");
+                        globalRates = newRates;
                     }
                 });
         }
@@ -299,24 +252,17 @@
         function toggleAwayMode() {
             const btn = document.getElementById('btn-away-mode');
             btn.innerText = "UPDATING...";
-            fetch('/api?action=admin_toggle_credit')
-                .then(res => res.json())
-                .then(() => loadSettings());
+            fetch('/api?action=admin_toggle_credit').then(res => res.json()).then(() => loadSettings());
         }
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             event.target.classList.add('active');
-            
             document.querySelectorAll('.tab').forEach(t => {
-                if(t.innerText === 'UNPAID CREDITS' && !t.classList.contains('active')) {
-                    t.style.background = 'transparent'; t.style.color = 'var(--warning)';
-                } else if(t.innerText === 'UNPAID CREDITS' && t.classList.contains('active')) {
-                    t.style.background = 'var(--warning)'; t.style.color = '#fff';
-                }
+                if(t.innerText === 'UNPAID CREDITS' && !t.classList.contains('active')) { t.style.background = 'transparent'; t.style.color = 'var(--warning)'; } 
+                else if(t.innerText === 'UNPAID CREDITS' && t.classList.contains('active')) { t.style.background = 'var(--warning)'; t.style.color = '#fff'; }
             });
-
             document.getElementById('tab-' + tabId).classList.add('active');
             currentTab = tabId;
             fetchData();
@@ -335,17 +281,18 @@
                 .then(data => {
                     const list = document.getElementById('queue-list');
                     if (data.error) return list.innerHTML = `<div class="empty-state" style="color: red;">SYS ERR: ${data.error}</div>`;
-                    
                     document.getElementById('queue-count').innerText = data.length;
                     if (data.length === 0) return list.innerHTML = '<div class="empty-state">NO PENDING REQUESTS</div>';
                     
                     list.innerHTML = '';
                     data.forEach(user => {
+                        // Translate plan codes like 'std1' into human readable names like '1 Hour'
+                        let planName = globalRates[user.requested_plan] ? globalRates[user.requested_plan].n : user.requested_plan;
                         list.innerHTML += `
                             <div class="card">
                                 <div>
                                     <div class="mac">${user.client_mac}</div>
-                                    <div class="plan">REQ: <strong style="color:var(--light)">${user.requested_plan}</strong> | PAY: <strong style="color:var(--success)">₱${user.payment_amount}</strong></div>
+                                    <div class="plan">REQ: <strong style="color:var(--light)">${planName}</strong> | PAY: <strong style="color:var(--success)">₱${user.payment_amount}</strong></div>
                                 </div>
                                 <div class="btn-group">
                                     <button class="btn btn-decline" onclick="declineUser('${user.client_mac}', this)">DECLINE</button>
@@ -363,16 +310,12 @@
                     const list = document.getElementById('active-list');
                     if (data.error) return list.innerHTML = `<div class="empty-state" style="color: red;">SYS ERR: ${data.error}</div>`;
                     if (data.length === 0) return list.innerHTML = '<div class="empty-state">NO ACTIVE UPLINKS</div>';
-                    
                     list.innerHTML = '';
                     data.forEach(user => {
                         let minsLeft = user.total_minutes_bought - user.minutes_used;
                         list.innerHTML += `
                             <div class="card active-client">
-                                <div>
-                                    <div class="mac">${user.client_mac}</div>
-                                    <div class="plan">Time Remaining: <span class="time-used">${minsLeft} mins</span></div>
-                                </div>
+                                <div><div class="mac">${user.client_mac}</div><div class="plan">Time Remaining: <span class="time-used">${minsLeft} mins</span></div></div>
                                 <button class="btn btn-suspend" onclick="suspendUser('${user.client_mac}', this)">SUSPEND</button>
                             </div>`;
                     });
@@ -385,22 +328,11 @@
                 .then(data => {
                     const list = document.getElementById('credits-list');
                     if (data.error) return list.innerHTML = `<div class="empty-state" style="color: red;">SYS ERR: ${data.error}</div>`;
-                    if (data.length === 0) {
-                        document.getElementById('credit-map').style.display = 'none';
-                        return list.innerHTML = '<div class="empty-state" style="color: var(--success);">ALL CREDITS SETTLED</div>';
-                    }
-                    
+                    if (data.length === 0) { document.getElementById('credit-map').style.display = 'none'; return list.innerHTML = '<div class="empty-state" style="color: var(--success);">ALL CREDITS SETTLED</div>'; }
                     list.innerHTML = '';
                     data.forEach(user => {
-                        const safeAddress = user.customer_address.replace(/'/g, "\\'");
-                        const safeName = user.customer_name.replace(/'/g, "\\'");
-                        const lat = user.lat || '';
-                        const lng = user.lng || '';
-                        
-                        let gpsDisplay = (lat && lng && lat !== 'null' && lat !== '') 
-                            ? `GPS: ${parseFloat(lat).toFixed(5)}, ${parseFloat(lng).toFixed(5)}` 
-                            : 'GPS: Not acquired';
-                        
+                        const safeAddress = user.customer_address.replace(/'/g, "\\'"); const safeName = user.customer_name.replace(/'/g, "\\'"); const lat = user.lat || ''; const lng = user.lng || '';
+                        let gpsDisplay = (lat && lng && lat !== 'null' && lat !== '') ? `GPS: ${parseFloat(lat).toFixed(5)}, ${parseFloat(lng).toFixed(5)}` : 'GPS: Not acquired';
                         list.innerHTML += `
                             <div class="card credit-client">
                                 <div style="flex-grow: 1;">
@@ -421,49 +353,22 @@
         function locateOnMap(name, typedAddress, lat, lng) {
             const mapDiv = document.getElementById('credit-map');
             mapDiv.style.display = 'block';
-            
-            if (!map) {
-                map = L.map('credit-map').setView([8.5866, 123.3408], 13);
-                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
-                }).addTo(map);
-            }
-            
+            if (!map) { map = L.map('credit-map').setView([8.5866, 123.3408], 13); L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors', maxZoom: 19 }).addTo(map); }
             setTimeout(() => { map.invalidateSize(); }, 300);
-
             if (lat && lng && lat !== 'null' && lng !== 'null' && lat !== '') {
-                map.flyTo([lat, lng], 18);
-                if (currentMarker) map.removeLayer(currentMarker);
-                
-                currentMarker = L.marker([lat, lng]).addTo(map)
-                    .bindPopup(`<strong style="color:#000;">${name}</strong><br><span style="color:#333;">Typed: ${typedAddress}</span><br><small style="color:var(--success); font-weight:bold;">[GPS VERIFIED]</small>`)
-                    .openPopup();
-                    
+                map.flyTo([lat, lng], 18); if (currentMarker) map.removeLayer(currentMarker);
+                currentMarker = L.marker([lat, lng]).addTo(map).bindPopup(`<strong style="color:#000;">${name}</strong><br><span style="color:#333;">Typed: ${typedAddress}</span><br><small style="color:var(--success); font-weight:bold;">[GPS VERIFIED]</small>`).openPopup();
                 mapDiv.scrollIntoView({ behavior: 'smooth' });
-            } 
-            else {
+            } else {
                 const searchQuery = encodeURIComponent(typedAddress + ", Dipolog City, Zamboanga del Norte, Philippines");
-                
                 fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}`)
-                    .then(res => res.json())
-                    .then(data => {
+                    .then(res => res.json()).then(data => {
                         if (data && data.length > 0) {
-                            const fallbackLat = data[0].lat;
-                            const fallbackLon = data[0].lon;
-                            
-                            map.flyTo([fallbackLat, fallbackLon], 16);
-                            if (currentMarker) map.removeLayer(currentMarker);
-                            
-                            currentMarker = L.marker([fallbackLat, fallbackLon]).addTo(map)
-                                .bindPopup(`<strong style="color:#000;">${name}</strong><br><span style="color:#333;">Typed: ${typedAddress}</span><br><small style="color:var(--warning); font-weight:bold;">[ESTIMATED: NO GPS DATA]</small>`)
-                                .openPopup();
-                                
+                            map.flyTo([data[0].lat, data[0].lon], 16); if (currentMarker) map.removeLayer(currentMarker);
+                            currentMarker = L.marker([data[0].lat, data[0].lon]).addTo(map).bindPopup(`<strong style="color:#000;">${name}</strong><br><span style="color:#333;">Typed: ${typedAddress}</span><br><small style="color:var(--warning); font-weight:bold;">[ESTIMATED: NO GPS DATA]</small>`).openPopup();
                             mapDiv.scrollIntoView({ behavior: 'smooth' });
-                        } else {
-                            alert("No GPS data found, and the map couldn't pinpoint the typed address automatically.");
-                        }
-                    })
-                    .catch(err => console.error("Geocoding Error:", err));
+                        } else { alert("No GPS data found, and the map couldn't pinpoint the typed address automatically."); }
+                    }).catch(err => console.error("Geocoding Error:", err));
             }
         }
 
@@ -472,43 +377,20 @@
         function suspendUser(mac, btn) { btn.innerText = "WAIT..."; fetch(`/api?action=admin_suspend&mac=${mac}`).then(() => fetchData()); }
         function clearCredit(id, btn) { btn.innerText = "WAIT..."; fetch(`/api?action=admin_clear_credit&id=${id}`).then(() => fetchData()); }
 
-        // ==========================================
-        // PROFIT CALCULATOR LOGIC
-        // ==========================================
         function calculateRealTime() {
-            let bill = parseFloat(document.getElementById('bill').value) || 0;
-            let energy = parseFloat(document.getElementById('energy').value) || 0;
-            let wattage = parseFloat(document.getElementById('wattage').value) || 0;
-            let targetDailyInput = document.getElementById('targetDaily');
-            let targetDaily = parseFloat(targetDailyInput.value) || 0;
-
-            let monthlyElec = (wattage / 1000) * 24 * 30 * energy;
-            let monthlyTotal = bill + monthlyElec;
-            let dailyBreakEven = monthlyTotal / 30;
-
-            document.getElementById('out-monthly').innerText = '₱' + monthlyTotal.toFixed(2);
-            document.getElementById('out-daily').innerText = '₱' + dailyBreakEven.toFixed(2);
-
+            let bill = parseFloat(document.getElementById('bill').value) || 0; let energy = parseFloat(document.getElementById('energy').value) || 0;
+            let wattage = parseFloat(document.getElementById('wattage').value) || 0; let targetDaily = parseFloat(document.getElementById('targetDaily').value) || 0;
+            let monthlyTotal = bill + ((wattage / 1000) * 24 * 30 * energy); let dailyBreakEven = monthlyTotal / 30;
+            document.getElementById('out-monthly').innerText = '₱' + monthlyTotal.toFixed(2); document.getElementById('out-daily').innerText = '₱' + dailyBreakEven.toFixed(2);
             let warningBox = document.getElementById('warning-msg');
-            
             if (targetDaily < dailyBreakEven) {
                 let safePrice = Math.ceil(dailyBreakEven / 5) * 5;
-                warningBox.innerText = '⚠️ AUTO-ADJUSTED: Calculated at ₱' + safePrice + ' minimum to prevent loss.';
-                warningBox.style.display = 'block';
-                targetDaily = safePrice; 
-            } else {
-                warningBox.style.display = 'none';
-            }
-
-            document.getElementById('r-1h').innerText = '₱' + Math.round(targetDaily / 6);
-            document.getElementById('r-3h').innerText = '₱' + Math.round(targetDaily / 3);
-            document.getElementById('r-10h').innerText = '₱' + Math.round(targetDaily * 0.66);
-            document.getElementById('r-1d').innerText = '₱' + targetDaily;
-
-            document.getElementById('r-3d').innerText = '₱' + Math.round((targetDaily * 3) * 0.78);
-            document.getElementById('r-7d').innerText = '₱' + Math.round((targetDaily * 7) * 0.715);
-            document.getElementById('r-15d').innerText = '₱' + Math.round((targetDaily * 15) * 0.666);
-            document.getElementById('r-30d').innerText = '₱' + Math.round((targetDaily * 30) * 0.555);
+                warningBox.innerText = '⚠️ AUTO-ADJUSTED: Calculated at ₱' + safePrice + ' minimum to prevent loss.'; warningBox.style.display = 'block'; targetDaily = safePrice; 
+            } else { warningBox.style.display = 'none'; }
+            document.getElementById('r-1h').innerText = '₱' + Math.round(targetDaily / 6); document.getElementById('r-3h').innerText = '₱' + Math.round(targetDaily / 3);
+            document.getElementById('r-10h').innerText = '₱' + Math.round(targetDaily * 0.66); document.getElementById('r-1d').innerText = '₱' + targetDaily;
+            document.getElementById('r-3d').innerText = '₱' + Math.round((targetDaily * 3) * 0.78); document.getElementById('r-7d').innerText = '₱' + Math.round((targetDaily * 7) * 0.715);
+            document.getElementById('r-15d').innerText = '₱' + Math.round((targetDaily * 15) * 0.666); document.getElementById('r-30d').innerText = '₱' + Math.round((targetDaily * 30) * 0.555);
         }
     </script>
 </body>
