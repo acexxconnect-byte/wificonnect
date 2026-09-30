@@ -63,9 +63,9 @@
         .warning-box { background: rgba(255, 0, 60, 0.1); color: var(--warning); border: 1px solid var(--warning); padding: 12px; border-radius: 2px; font-weight: bold; font-size: 0.9rem; margin-top: 15px; text-align: center; display: none; text-shadow: 0 0 5px rgba(255, 0, 60, 0.5); }
         .section-label { background: rgba(0, 210, 255, 0.1); padding: 8px; border-left: 3px solid var(--primary); color: var(--primary); margin-top: 20px; font-weight: bold; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* Dynamic Rate Editor CSS */
-        .rate-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
-        .rate-row input { flex: 1; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 210, 255, 0.3); color: var(--primary); font-family: 'Rajdhani', sans-serif; border-radius: 2px; font-weight: bold; }
+        /* Dynamic Rate Editor CSS (UPDATED FOR VALIDITY) */
+        .rate-row { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }
+        .rate-row input { flex: 1; min-width: 0; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 210, 255, 0.3); color: var(--primary); font-family: 'Rajdhani', sans-serif; border-radius: 2px; font-weight: bold; }
         .rate-row input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 5px var(--primary-glow); }
         .rate-label { width: 40px; font-weight: bold; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; text-align: center; }
 
@@ -105,8 +105,22 @@
         <div id="tab-queue" class="tab-content active"><div id="queue-list"></div></div>
         <div id="tab-active" class="tab-content"><div id="active-list"></div></div>
         <div id="tab-credits" class="tab-content"><div id="credit-map"></div><div id="credits-list"></div></div>
+        
+        <!-- TAB 4: PROFIT CALCULATOR -->
         <div id="tab-calc" class="tab-content">
-            <!-- (PROFIT CALC CONTENT IS UNAFFECTED & REMAINS THE SAME AS PREVIOUS CODE) -->
+            <div class="settings-box">
+                <h3>>> OPERATING COSTS</h3>
+                <label style="color: #8892b0; font-weight: bold; display: block;">Monthly Internet Bill (₱)</label>
+                <input type="number" id="bill" class="input-field" style="max-width: 100%; text-align: left; letter-spacing: normal;" value="680" oninput="calculateRealTime()">
+                <label style="color: #8892b0; font-weight: bold; display: block;">Energy Rate (₱ / kWh)</label>
+                <input type="number" id="energy" class="input-field" style="max-width: 100%; text-align: left; letter-spacing: normal;" value="14" oninput="calculateRealTime()">
+                <label style="color: #8892b0; font-weight: bold; display: block;">AP + Modem Wattage (Watts)</label>
+                <input type="number" id="wattage" class="input-field" style="max-width: 100%; text-align: left; letter-spacing: normal;" value="15" oninput="calculateRealTime()">
+                <div style="margin-top: 15px; border-top: 1px dashed rgba(0, 210, 255, 0.3); padding-top: 15px;">
+                    <div class="result-row"><span>Total Monthly Cost:</span><span class="price-text" id="out-monthly">₱0.00</span></div>
+                    <div class="result-row"><span>Daily Break-Even:</span><span class="break-even" id="out-daily">₱0.00</span></div>
+                </div>
+            </div>
             <div class="settings-box">
                 <h3>>> RATE CALCULATOR</h3>
                 <label style="color: #8892b0; font-weight: bold; display: block;">Target Price for 1-Day Protocol (₱)</label>
@@ -127,12 +141,12 @@
 
         <div id="tab-settings" class="tab-content">
             
-            <!-- NEW DYNAMIC RATE MANAGER -->
+            <!-- NEW DYNAMIC RATE MANAGER WITH VALIDITY COLUMN -->
             <div class="settings-box">
                 <h3>>> DYNAMIC RATE MANAGER</h3>
-                <p>Adjust the exact Name, Time (Minutes), and Price (₱) for your protocols. Click SAVE to update the live system immediately.</p>
+                <p>Adjust the exact Name, Time (Minutes), Validity Expiration (Hours), and Price (₱) for your protocols.</p>
                 <div style="display: flex; padding: 5px 0; color: #8892b0; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">
-                    <span style="width: 48px;">Type</span><span style="flex: 1;">Display Name</span><span style="flex: 1;">Minutes</span><span style="flex: 1;">Price (₱)</span>
+                    <span style="width: 48px;">Type</span><span style="flex: 1.5;">Display Name</span><span style="flex: 1;">Mins</span><span style="flex: 1;">Val(Hrs)</span><span style="flex: 1;">Price(₱)</span>
                 </div>
                 <div id="rate-editor-list"><div class="empty-state">LOADING RATES...</div></div>
                 <button class="btn-action" style="margin-top: 15px; width: 100%; max-width: 100%;" onclick="saveRates(event)">SAVE & DEPLOY RATES</button>
@@ -197,15 +211,21 @@
                     } else {
                         btn.style.background = 'transparent'; btn.style.color = 'var(--primary)'; btn.style.borderColor = 'var(--primary)'; btn.innerText = 'AWAY MODE (CREDITS): OFF';
                     }
-                });
+                }).catch(e => console.log('Away sync pending...'));
 
-            // LOAD DYNAMIC RATES EDITOR
             if (Object.keys(globalRates).length === 0) {
                 fetch('/api?action=get_rates')
-                    .then(res => res.json())
+                    .then(res => { if (!res.ok) throw new Error("Backend not fully deployed."); return res.json(); })
                     .then(rates => {
+                        if (rates.error) { document.getElementById('rate-editor-list').innerHTML = `<div class="empty-state" style="color: var(--warning);">SYS_ERR: ${rates.error}</div>`; return; }
                         globalRates = rates;
                         renderRateEditor();
+                    })
+                    .catch(err => {
+                        document.getElementById('rate-editor-list').innerHTML = `
+                            <div class="empty-state" style="color: var(--warning);">
+                                SYNCING WITH CLOUDFLARE...<br><small style="color: #8892b0; margin-top: 10px; display:block;">If this takes over 1 minute, check your Cloudflare Deployments tab.</small>
+                            </div>`;
                     });
             }
         }
@@ -219,9 +239,10 @@
                 html += `
                 <div class="rate-row">
                     <div class="rate-label" style="color: ${typeColor}">${type}</div>
-                    <input type="text" id="name_${key}" value="${r.n}" placeholder="Name">
-                    <input type="number" id="mins_${key}" value="${r.m}" placeholder="Mins">
-                    <input type="number" id="price_${key}" value="${r.p}" placeholder="₱">
+                    <input type="text" id="name_${key}" value="${r.n}" style="flex: 1.5;" placeholder="Name">
+                    <input type="number" id="mins_${key}" value="${r.m}" style="flex: 1;" placeholder="Mins">
+                    <input type="number" id="val_${key}" value="${r.v || 24}" style="flex: 1;" placeholder="Val(Hrs)">
+                    <input type="number" id="price_${key}" value="${r.p}" style="flex: 1;" placeholder="₱">
                 </div>`;
             }
             document.getElementById('rate-editor-list').innerHTML = html;
@@ -235,6 +256,7 @@
                 newRates[key] = {
                     n: document.getElementById(`name_${key}`).value,
                     m: parseInt(document.getElementById(`mins_${key}`).value),
+                    v: parseInt(document.getElementById(`val_${key}`).value) || 24,
                     p: parseFloat(document.getElementById(`price_${key}`).value)
                 };
             }
@@ -243,7 +265,7 @@
                 .then(data => {
                     if(data.success) {
                         btn.innerText = "SAVE & DEPLOY RATES";
-                        alert("✅ RATES UPDATED SUCCESSFULLY!\nThe client portal and network billing logic will now use these new prices and times.");
+                        alert("✅ RATES UPDATED SUCCESSFULLY!\nThe client portal will now automatically show these validity times and prices.");
                         globalRates = newRates;
                     }
                 });
@@ -286,7 +308,6 @@
                     
                     list.innerHTML = '';
                     data.forEach(user => {
-                        // Translate plan codes like 'std1' into human readable names like '1 Hour'
                         let planName = globalRates[user.requested_plan] ? globalRates[user.requested_plan].n : user.requested_plan;
                         list.innerHTML += `
                             <div class="card">
