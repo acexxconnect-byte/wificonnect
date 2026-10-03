@@ -93,19 +93,19 @@
             <button class="btn" style="margin-top: 15px; margin-left: 10px; background: transparent; border: 1px solid #555; color: #8892b0;" onclick="logout()">LOGOUT</button>
         </div>
 
+        <!-- FIXED: Passed `this` to switchTab to prevent silent JavaScript crashes -->
         <div class="tab-bar">
-            <div class="tab active" onclick="switchTab('queue')">PENDING (<span id="queue-count">0</span>)</div>
-            <div class="tab" onclick="switchTab('active')">ACTIVE UPLINKS</div>
-            <div class="tab" style="border-color: var(--warning); color: var(--warning);" onclick="switchTab('credits')">UNPAID CREDITS</div>
-            <div class="tab" onclick="switchTab('calc')">PROFIT CALC</div>
-            <div class="tab" onclick="switchTab('settings')">SYS SETTINGS</div>
+            <div class="tab active" onclick="switchTab('queue', this)">PENDING (<span id="queue-count">0</span>)</div>
+            <div class="tab" onclick="switchTab('active', this)">ACTIVE UPLINKS</div>
+            <div class="tab" style="border-color: var(--warning); color: var(--warning);" onclick="switchTab('credits', this)">UNPAID CREDITS</div>
+            <div class="tab" onclick="switchTab('calc', this)">PROFIT CALC</div>
+            <div class="tab" onclick="switchTab('settings', this)">SYS SETTINGS</div>
         </div>
 
         <div id="tab-queue" class="tab-content active"><div id="queue-list"></div></div>
         <div id="tab-active" class="tab-content"><div id="active-list"></div></div>
         <div id="tab-credits" class="tab-content"><div id="credit-map"></div><div id="credits-list"></div></div>
         
-        <!-- TAB 4: PROFIT CALCULATOR -->
         <div id="tab-calc" class="tab-content">
             <div class="settings-box">
                 <h3>>> OPERATING COSTS</h3>
@@ -150,7 +150,6 @@
                 <button class="btn-action" style="margin-top: 15px; width: 100%; max-width: 100%;" onclick="saveRates(event)">SAVE & DEPLOY RATES</button>
             </div>
 
-            <!-- NEW: ARCADE TARGET SCORE SETTING -->
             <div class="settings-box">
                 <h3>>> ARCADE REWARD SYSTEM</h3>
                 <label style="color: #8892b0; font-weight: bold; display: block;">Target Score for 1-Hour Free Wi-Fi</label>
@@ -219,7 +218,7 @@
                     } else {
                         btn.style.background = 'transparent'; btn.style.color = 'var(--primary)'; btn.style.borderColor = 'var(--primary)'; btn.innerText = 'AWAY MODE (CREDITS): OFF';
                     }
-                    if (data.arcade_target) {
+                    if (data.arcade_target && document.getElementById('arcade-target')) {
                         document.getElementById('arcade-target').value = data.arcade_target;
                     }
                 }).catch(e => console.log('Away sync pending...'));
@@ -301,14 +300,18 @@
             fetch('/api?action=admin_toggle_credit').then(res => res.json()).then(() => loadSettings());
         }
 
-        function switchTab(tabId) {
+        // FIXED: Removed volatile event.target mapping
+        function switchTab(tabId, element) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            event.target.classList.add('active');
+            if(element) element.classList.add('active');
+            
+            // Adjust Credit Tab visual warning colors
             document.querySelectorAll('.tab').forEach(t => {
-                if(t.innerText === 'UNPAID CREDITS' && !t.classList.contains('active')) { t.style.background = 'transparent'; t.style.color = 'var(--warning)'; } 
-                else if(t.innerText === 'UNPAID CREDITS' && t.classList.contains('active')) { t.style.background = 'var(--warning)'; t.style.color = '#fff'; }
+                if(t.innerText.includes('UNPAID CREDITS') && !t.classList.contains('active')) { t.style.background = 'transparent'; t.style.color = 'var(--warning)'; } 
+                else if(t.innerText.includes('UNPAID CREDITS') && t.classList.contains('active')) { t.style.background = 'var(--warning)'; t.style.color = '#fff'; }
             });
+            
             document.getElementById('tab-' + tabId).classList.add('active');
             currentTab = tabId;
             fetchData();
@@ -321,50 +324,74 @@
             if (currentTab === 'credits') loadCredits();
         }
 
+        // FIXED: Wrapped Rendering with Safety Nets
         function loadQueue() {
             fetch('/api?action=admin_list')
                 .then(res => res.json())
                 .then(data => {
                     const list = document.getElementById('queue-list');
-                    if (data.error) return list.innerHTML = `<div class="empty-state" style="color: red;">SYS ERR: ${data.error}</div>`;
-                    document.getElementById('queue-count').innerText = data.length;
-                    if (data.length === 0) return list.innerHTML = '<div class="empty-state">NO PENDING REQUESTS</div>';
+                    if (!list) return;
                     
-                    list.innerHTML = '';
-                    data.forEach(user => {
-                        let planName = globalRates[user.requested_plan] ? globalRates[user.requested_plan].n : user.requested_plan;
-                        list.innerHTML += `
-                            <div class="card">
-                                <div>
-                                    <div class="mac">${user.client_mac}</div>
-                                    <div class="plan">REQ: <strong style="color:var(--light)">${planName}</strong> | PAY: <strong style="color:var(--success)">₱${user.payment_amount}</strong></div>
-                                </div>
-                                <div class="btn-group">
-                                    <button class="btn btn-decline" onclick="declineUser('${user.client_mac}', this)">DECLINE</button>
-                                    <button class="btn btn-approve" onclick="approveUser('${user.client_mac}', '${user.requested_plan}', this)">APPROVE</button>
-                                </div>
-                            </div>`;
-                    });
+                    if (data.error) return list.innerHTML = `<div class="empty-state" style="color: red;">SYS ERR: ${data.error}</div>`;
+                    
+                    document.getElementById('queue-count').innerText = data ? data.length : 0;
+                    
+                    if (!data || data.length === 0) {
+                        return list.innerHTML = '<div class="empty-state">NO PENDING REQUESTS</div>';
+                    }
+                    
+                    try {
+                        list.innerHTML = '';
+                        data.forEach(user => {
+                            let planName = (globalRates && globalRates[user.requested_plan]) ? globalRates[user.requested_plan].n : user.requested_plan;
+                            list.innerHTML += `
+                                <div class="card">
+                                    <div>
+                                        <div class="mac">${user.client_mac}</div>
+                                        <div class="plan">REQ: <strong style="color:var(--light)">${planName}</strong> | PAY: <strong style="color:var(--success)">₱${user.payment_amount}</strong></div>
+                                    </div>
+                                    <div class="btn-group">
+                                        <button class="btn btn-decline" onclick="declineUser('${user.client_mac}', this)">DECLINE</button>
+                                        <button class="btn btn-approve" onclick="approveUser('${user.client_mac}', '${user.requested_plan}', this)">APPROVE</button>
+                                    </div>
+                                </div>`;
+                        });
+                    } catch(e) {
+                        console.error(e);
+                        list.innerHTML = '<div class="empty-state">DATA RENDER ERROR</div>';
+                    }
                 }).catch(() => document.getElementById('queue-list').innerHTML = `<div class="empty-state" style="color: red;">NETWORK OFFLINE</div>`);
         }
 
+        // FIXED: Wrapped Rendering with Safety Nets and Catch Block
         function loadActiveClients() {
             fetch('/api?action=admin_active_list')
                 .then(res => res.json())
                 .then(data => {
                     const list = document.getElementById('active-list');
+                    if (!list) return;
+                    
                     if (data.error) return list.innerHTML = `<div class="empty-state" style="color: red;">SYS ERR: ${data.error}</div>`;
-                    if (data.length === 0) return list.innerHTML = '<div class="empty-state">NO ACTIVE UPLINKS</div>';
-                    list.innerHTML = '';
-                    data.forEach(user => {
-                        let minsLeft = user.total_minutes_bought - user.minutes_used;
-                        list.innerHTML += `
-                            <div class="card active-client">
-                                <div><div class="mac">${user.client_mac}</div><div class="plan">Time Remaining: <span class="time-used">${minsLeft} mins</span></div></div>
-                                <button class="btn btn-suspend" onclick="suspendUser('${user.client_mac}', this)">SUSPEND</button>
-                            </div>`;
-                    });
-                });
+                    
+                    if (!data || data.length === 0) {
+                        return list.innerHTML = '<div class="empty-state">NO ACTIVE UPLINKS</div>';
+                    }
+                    
+                    try {
+                        list.innerHTML = '';
+                        data.forEach(user => {
+                            let minsLeft = user.total_minutes_bought - user.minutes_used;
+                            list.innerHTML += `
+                                <div class="card active-client">
+                                    <div><div class="mac">${user.client_mac}</div><div class="plan">Time Remaining: <span class="time-used">${minsLeft} mins</span></div></div>
+                                    <button class="btn btn-suspend" onclick="suspendUser('${user.client_mac}', this)">SUSPEND</button>
+                                </div>`;
+                        });
+                    } catch(e) {
+                        console.error(e);
+                        list.innerHTML = '<div class="empty-state">DATA RENDER ERROR</div>';
+                    }
+                }).catch(() => document.getElementById('active-list').innerHTML = `<div class="empty-state" style="color: red;">NETWORK OFFLINE</div>`);
         }
 
         function loadCredits() {
@@ -372,27 +399,31 @@
                 .then(res => res.json())
                 .then(data => {
                     const list = document.getElementById('credits-list');
+                    if (!list) return;
                     if (data.error) return list.innerHTML = `<div class="empty-state" style="color: red;">SYS ERR: ${data.error}</div>`;
-                    if (data.length === 0) { document.getElementById('credit-map').style.display = 'none'; return list.innerHTML = '<div class="empty-state" style="color: var(--success);">ALL CREDITS SETTLED</div>'; }
-                    list.innerHTML = '';
-                    data.forEach(user => {
-                        const safeAddress = user.customer_address.replace(/'/g, "\\'"); const safeName = user.customer_name.replace(/'/g, "\\'"); const lat = user.lat || ''; const lng = user.lng || '';
-                        let gpsDisplay = (lat && lng && lat !== 'null' && lat !== '') ? `GPS: ${parseFloat(lat).toFixed(5)}, ${parseFloat(lng).toFixed(5)}` : 'GPS: Not acquired';
-                        list.innerHTML += `
-                            <div class="card credit-client">
-                                <div style="flex-grow: 1;">
-                                    <div class="mac" style="color: var(--warning);">${user.customer_name}</div>
-                                    <div class="plan" style="color: var(--light);">Loc: ${user.customer_address}</div>
-                                    <div class="plan" style="color: var(--primary); font-family: 'Orbitron', monospace; font-size: 0.85rem;">${gpsDisplay}</div>
-                                    <div class="plan">SYS_ID: ${user.client_mac} | Owed: <strong style="color:var(--danger)">₱${user.amount_owed}</strong></div>
-                                </div>
-                                <div class="btn-group">
-                                    <button class="btn btn-locate" onclick="locateOnMap('${safeName}', '${safeAddress}', '${lat}', '${lng}')">LOCATE</button>
-                                    <button class="btn btn-approve" onclick="clearCredit(${user.id}, this)">MARK PAID</button>
-                                </div>
-                            </div>`;
-                    });
-                });
+                    if (!data || data.length === 0) { document.getElementById('credit-map').style.display = 'none'; return list.innerHTML = '<div class="empty-state" style="color: var(--success);">ALL CREDITS SETTLED</div>'; }
+                    
+                    try {
+                        list.innerHTML = '';
+                        data.forEach(user => {
+                            const safeAddress = user.customer_address.replace(/'/g, "\\'"); const safeName = user.customer_name.replace(/'/g, "\\'"); const lat = user.lat || ''; const lng = user.lng || '';
+                            let gpsDisplay = (lat && lng && lat !== 'null' && lat !== '') ? `GPS: ${parseFloat(lat).toFixed(5)}, ${parseFloat(lng).toFixed(5)}` : 'GPS: Not acquired';
+                            list.innerHTML += `
+                                <div class="card credit-client">
+                                    <div style="flex-grow: 1;">
+                                        <div class="mac" style="color: var(--warning);">${user.customer_name}</div>
+                                        <div class="plan" style="color: var(--light);">Loc: ${user.customer_address}</div>
+                                        <div class="plan" style="color: var(--primary); font-family: 'Orbitron', monospace; font-size: 0.85rem;">${gpsDisplay}</div>
+                                        <div class="plan">SYS_ID: ${user.client_mac} | Owed: <strong style="color:var(--danger)">₱${user.amount_owed}</strong></div>
+                                    </div>
+                                    <div class="btn-group">
+                                        <button class="btn btn-locate" onclick="locateOnMap('${safeName}', '${safeAddress}', '${lat}', '${lng}')">LOCATE</button>
+                                        <button class="btn btn-approve" onclick="clearCredit(${user.id}, this)">MARK PAID</button>
+                                    </div>
+                                </div>`;
+                        });
+                    } catch(e) { console.error(e); }
+                }).catch(() => document.getElementById('credits-list').innerHTML = `<div class="empty-state" style="color: red;">NETWORK OFFLINE</div>`);
         }
 
         function locateOnMap(name, typedAddress, lat, lng) {
