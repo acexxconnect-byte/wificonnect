@@ -127,12 +127,13 @@
     localStorage.setItem('saved_mac', clientMac);
     document.getElementById('mac-address-label').innerText = 'SYS_ID: ' + clientMac;
 
+    let currentRatesString = '';
+    let userHasDebt = false; // Tracks if the user currently owes money
+
     function showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(screenId).classList.add('active');
     }
-
-    let currentRatesString = '';
 
     function renderRates(rates) {
         const ratesJson = JSON.stringify(rates);
@@ -158,6 +159,12 @@
     fetch('/api?action=get_rates').then(res => res.json()).then(rates => { if (!rates.error) renderRates(rates); });
 
     function requestPlan(planCode, price) {
+        // ENFORCE DEBT BLOCKER ON PLAN SELECTION
+        if (userHasDebt) {
+            alert("You have credit from the last time you connect, Please pay your remaining credit to connect, Enjoy");
+            return;
+        }
+
         showScreen('screen-queue'); document.getElementById('queue-title').innerText = 'ESTABLISHING...'; document.getElementById('queue-spinner').style.display = 'block'; document.getElementById('queue-message').innerText = `Requesting protocol ₱${price}...`;
         fetch(`/api?action=join&mac=${clientMac}`)
             .then(() => fetch(`/api?action=request&mac=${clientMac}&plan=${planCode}`))
@@ -193,7 +200,7 @@
         }
 
         if (action === 'play') {
-            document.getElementById('btn-play').style.display = 'none'; document.getElementById('btn-pause').style.display = 'block'; document.getElementById('status-badge').className = 'status-badge status-playing'; document.getElementById('status-badge').innerText = 'CONNECTING TO ACTIVATE';
+            document.getElementById('btn-play').style.display = 'none'; document.getElementById('btn-pause').style.display = 'block'; document.getElementById('status-badge').className = 'status-badge status-playing'; document.getElementById('status-badge').innerText = 'ACTIVE';
             fetch(`/api?action=play&mac=${clientMac}`).then(res => res.json()).then(data => {
                 if (data.error) { alert("ERROR: Time has expired or reached zero."); }
             });
@@ -254,11 +261,20 @@
                 
                 if (data.rates && !data.rates.error) renderRates(data.rates);
 
+                // Update Debt Status
+                userHasDebt = data.has_debt || false;
+
                 const creditSec = document.getElementById('credit-section'); const creditBtn = document.getElementById('btn-credit-request');
                 if (creditSec && creditBtn) {
                     creditSec.style.display = data.credit_enabled === 'true' ? 'block' : 'none';
                     
-                    if (data.eligible) {
+                    // ENFORCE DEBT BLOCKER ON CREDIT BUTTON
+                    if (data.has_debt) {
+                        creditBtn.onclick = () => alert('You have credit from the last time you connect, Please pay your remaining credit to connect, Enjoy'); 
+                        creditBtn.style.opacity = '0.4'; 
+                        creditBtn.style.borderColor = 'var(--danger)'; 
+                        creditBtn.innerText = '🔒 UNPAID CREDIT DETECTED';
+                    } else if (data.eligible) {
                         creditBtn.onclick = () => showScreen('screen-credit'); 
                         creditBtn.style.opacity = '1'; 
                         creditBtn.style.borderColor = 'var(--warning)'; 
@@ -286,14 +302,13 @@
                         expBadge.innerText = '';
                     }
 
-                    // FIXED: Replaced ' ' with 'T' to prevent NaN math crashes on mobile devices, rounded precision
                     if (session.status === 'playing') {
                         const startTime = new Date(session.last_play_time.replace(' ', 'T') + 'Z').getTime(); 
                         const secondsPlayed = Math.floor((Date.now() - startTime) / 1000);
                         cachedSecondsLeft = Math.round((session.total_minutes_bought * 60) - (session.minutes_used * 60)) - secondsPlayed; 
                         sessionEndTime = Date.now() + (cachedSecondsLeft * 1000); 
                         isPlaying = true;
-                        document.getElementById('status-badge').className = 'status-badge status-playing'; document.getElementById('status-badge').innerText = 'UPLINK ACTIVATED'; document.getElementById('btn-play').style.display = 'none'; document.getElementById('btn-pause').style.display = 'block';
+                        document.getElementById('status-badge').className = 'status-badge status-playing'; document.getElementById('status-badge').innerText = 'UPLINK ACTIVE'; document.getElementById('btn-play').style.display = 'none'; document.getElementById('btn-pause').style.display = 'block';
                     } else {
                         cachedSecondsLeft = Math.round((session.total_minutes_bought * 60) - (session.minutes_used * 60)); 
                         isPlaying = false;
