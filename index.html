@@ -102,8 +102,8 @@
         
         <button id="btn-back-dash" class="btn-action btn-buy-more" style="display:none; margin-top: 20px;" onclick="showScreen('screen-dashboard')">RETURN TO DASHBOARD</button>
 
-        <!-- OFFLINE GAME BUTTON WITH PROMPT ALERT -->
-        <button class="btn-action" style="background: transparent; border: 1px dashed var(--success); color: var(--success); margin-top: 15px; font-size: 1rem;" onclick="alert('🎮 PLAY TO WIN!\n\nScore exactly 200 points in Neon Snake to instantly unlock 1 HOUR of free Wi-Fi!\n\nSwipe your screen or use the D-Pad buttons to control the snake. Good luck!'); startGame(); showScreen('screen-game')">👾 PLAY NEON SNAKE</button>
+        <!-- OFFLINE GAME BUTTON -->
+        <button class="btn-action" style="background: transparent; border: 1px dashed var(--success); color: var(--success); margin-top: 15px; font-size: 1rem;" onclick="playArcadeClicked()">👾 PLAY NEON SNAKE</button>
     </div>
 
     <!-- SCREEN 3: CREDIT FORM -->
@@ -137,8 +137,9 @@
     <!-- SCREEN 5: OFFLINE SNAKE GAME WITH REWARD HUD -->
     <div id="screen-game" class="screen">
         <h2 style="color: var(--secondary); text-shadow: 0 0 10px var(--secondary-glow);">NEON SNAKE</h2>
-        <p style="color: var(--primary); font-size: 0.9rem; font-weight: bold; margin-top: -10px;">🎁 SCORE 200 FOR 1 HOUR FREE WIFI!</p>
-        <p style="color: #8892b0; font-size: 0.8rem; margin-top: -5px;">Current Score: <span id="game-score" style="color: var(--success); font-weight: bold; font-size: 1rem;">0</span> / 200</p>
+        <!-- DYNAMIC REWARD INSTRUCTIONS -->
+        <p style="color: var(--primary); font-size: 0.9rem; font-weight: bold; margin-top: -10px;">🎁 SCORE <span id="target-score-display1">200</span> FOR 1 HOUR FREE WIFI!</p>
+        <p style="color: #8892b0; font-size: 0.8rem; margin-top: -5px;">Current Score: <span id="game-score" style="color: var(--success); font-weight: bold; font-size: 1rem;">0</span> / <span id="target-score-display2">200</span></p>
         
         <canvas id="gameCanvas" width="280" height="260"></canvas>
         
@@ -170,6 +171,7 @@
 
     let currentRatesString = '';
     let userHasDebt = false; 
+    let targetScore = 200; // Default target score
 
     function showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -307,6 +309,13 @@
                 
                 if (data.rates && !data.rates.error) renderRates(data.rates);
 
+                // DYNAMICALLY UPDATE ARCADE TARGET SCORE
+                if (data.arcade_target) {
+                    targetScore = parseInt(data.arcade_target);
+                    document.getElementById('target-score-display1').innerText = targetScore;
+                    document.getElementById('target-score-display2').innerText = targetScore;
+                }
+
                 userHasDebt = data.has_debt || false;
 
                 const creditSec = document.getElementById('credit-section'); const creditBtn = document.getElementById('btn-credit-request');
@@ -387,7 +396,7 @@
     }, 3000);
 
     /* =========================================
-       SMOOTH NEON SNAKE ENGINE (60 FPS) WITH REWARD SYSTEM
+       SMOOTH NEON SNAKE ENGINE (60 FPS)
        ========================================= */
     let gameLoop;
     let canvas, ctx;
@@ -402,6 +411,13 @@
     const speed = 2.5; 
     const spacing = 6; 
     const radius = 6;
+
+    // Triggered when button is clicked
+    function playArcadeClicked() {
+        alert(`🎮 PLAY TO WIN!\n\nScore exactly ${targetScore} points in Neon Snake to instantly unlock 1 HOUR of free Wi-Fi!\n\nSwipe your screen or use the D-Pad buttons to control the snake. Good luck!`);
+        startGame(); 
+        showScreen('screen-game');
+    }
 
     function spawnFood() {
         food.x = Math.floor(Math.random() * (canvas.width - radius * 4)) + radius * 2;
@@ -478,11 +494,12 @@
             bodyLength += 4;
             document.getElementById('game-score').innerText = score;
             
-            if (score >= 200) {
+            // DYNAMIC WIN CONDITION BASED ON ADMIN SETTING
+            if (score >= targetScore) {
                 drawGame(); 
                 setTimeout(() => {
                     stopGame();
-                    alert("🎉 CONGRATULATIONS!\n\nYou scored 200 points! You have won 1 HOUR of free Wi-Fi! Activating your uplink now...");
+                    alert(`🎉 CONGRATULATIONS!\n\nYou scored ${targetScore} points! You have won 1 HOUR of free Wi-Fi! Activating your uplink now...`);
                     
                     fetch(`/api?action=reward_win&mac=${clientMac}`)
                         .then(() => {
