@@ -10,7 +10,6 @@ export async function onRequest(context) {
         return Response.json({ error: 'Missing MAC Address' }, { status: 400 });
     }
 
-    // UPDATED: Added 'v' (Validity in Hours) to each rate
     async function getRates() {
         let defaultRates = {
             std1: { n: "1 Hour", m: 60, p: 5, v: 24 },
@@ -32,7 +31,6 @@ export async function onRequest(context) {
         return defaultRates;
     }
 
-    // HELPER: Wipes session if past expiration date
     async function checkExpiration(session) {
         if (!session) return null;
         if (session.expires_at && Date.now() > session.expires_at && session.total_minutes_bought > session.minutes_used) {
@@ -80,20 +78,21 @@ export async function onRequest(context) {
             const name = url.searchParams.get('name'); const address = url.searchParams.get('address');
             const lat = url.searchParams.get('lat') || ''; const lng = url.searchParams.get('lng') || '';
             
+            // NEW ELIGIBILITY CHECK: Must have spent 300 pesos
             const existingSession = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
-            const pCount = existingSession ? (existingSession.purchase_count || 0) : 0;
-            if (pCount < 3) return Response.json({ error: 'ACCESS DENIED: You must purchase a plan at least 3 times to unlock emergency credit.' });
+            const spent = existingSession ? (existingSession.total_spent || 0) : 0;
+            if (spent < 300) return Response.json({ error: 'ACCESS DENIED: You must spend a total of ₱300 to unlock emergency credit.' });
 
             const existingDebt = await env.DB.prepare("SELECT * FROM credits_log WHERE client_mac = ?").bind(mac).first();
             if (existingDebt) return Response.json({ error: 'ACCESS DENIED: Unpaid credit balance.' });
 
-            const newExpiry = Date.now() + (24 * 3600000); // 24 Hours validity for emergency credit
+            const newExpiry = Date.now() + (24 * 3600000); 
             
             if (existingSession) {
                 let baseTime = (existingSession.expires_at && existingSession.expires_at > Date.now()) ? existingSession.expires_at : Date.now();
                 await env.DB.prepare("UPDATE wifi_sessions SET total_minutes_bought = total_minutes_bought + 180, status = 'paused', expires_at = ? WHERE client_mac = ?").bind(baseTime + (24 * 3600000), mac).run();
             } else {
-                await env.DB.prepare("INSERT INTO wifi_sessions (client_mac, total_minutes_bought, minutes_used, status, purchase_count, expires_at) VALUES (?, 180, 0, 'paused', 3, ?)").bind(mac, newExpiry).run();
+                await env.DB.prepare("INSERT INTO wifi_sessions (client_mac, total_minutes_bought, minutes_used, status, purchase_count, total_spent, expires_at) VALUES (?, 180, 0, 'paused', 3, 300, ?)").bind(mac, newExpiry).run();
             }
 
             await env.DB.prepare("INSERT INTO credits_log (client_mac, customer_name, customer_address, amount_owed, lat, lng) VALUES (?, ?, ?, 10, ?, ?)").bind(mac, name, address, lat, lng).run();
@@ -124,18 +123,20 @@ export async function onRequest(context) {
             const rates = await getRates();
             const minutesBought = rates[plan] ? rates[plan].m : 0;
             const validityHours = rates[plan] ? (rates[plan].v || 24) : 24;
+            const amountPaid = rates[plan] ? rates[plan].p : 0; // NEW: Get plan price
             const addedTimeMs = validityHours * 3600000;
 
             const existingSession = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
             
             if (existingSession) {
-                // Stack expiry time!
                 let baseTime = (existingSession.expires_at && existingSession.expires_at > Date.now()) ? existingSession.expires_at : Date.now();
                 let newExpiresAt = baseTime + addedTimeMs;
-                await env.DB.prepare("UPDATE wifi_sessions SET total_minutes_bought = total_minutes_bought + ?, status = 'paused', purchase_count = COALESCE(purchase_count, 0) + 1, expires_at = ? WHERE client_mac = ?").bind(minutesBought, newExpiresAt, mac).run();
+                // NEW: Add amountPaid to total_spent
+                await env.DB.prepare("UPDATE wifi_sessions SET total_minutes_bought = total_minutes_bought + ?, status = 'paused', purchase_count = COALESCE(purchase_count, 0) + 1, total_spent = COALESCE(total_spent, 0) + ?, expires_at = ? WHERE client_mac = ?").bind(minutesBought, amountPaid, newExpiresAt, mac).run();
             } else {
                 let newExpiresAt = Date.now() + addedTimeMs;
-                await env.DB.prepare("INSERT INTO wifi_sessions (client_mac, total_minutes_bought, minutes_used, status, purchase_count, expires_at) VALUES (?, ?, 0, 'paused', 1, ?)").bind(mac, minutesBought, newExpiresAt).run();
+                // NEW: Save amountPaid as total_spent
+                await env.DB.prepare("INSERT INTO wifi_sessions (client_mac, total_minutes_bought, minutes_used, status, purchase_count, total_spent, expires_at) VALUES (?, ?, 0, 'paused', 1, ?, ?)").bind(mac, minutesBought, amountPaid, newExpiresAt).run();
             }
 
             await env.DB.prepare("DELETE FROM digital_queue WHERE client_mac = ?").bind(mac).run();
@@ -164,11 +165,11 @@ export async function onRequest(context) {
             const rates = await getRates();
             let sessionAll = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
             
-            // Trigger Expiration Wiping!
             sessionAll = await checkExpiration(sessionAll);
 
-            const pCount = sessionAll ? (sessionAll.purchase_count || 0) : 0;
-            const isEligible = pCount >= 3;
+            // NEW ELIGIBILITY CHECK: Must have spent 300 pesos
+            const spent = sessionAll ? (sessionAll.total_spent || 0) : 0;
+            const isEligible = spent >= 300;
 
             const queue = await env.DB.prepare("SELECT * FROM digital_queue WHERE client_mac = ?").bind(mac).first();
             if (queue) {
