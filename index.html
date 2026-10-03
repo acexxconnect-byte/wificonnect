@@ -72,6 +72,11 @@
         .dpad-right { grid-column: 3; grid-row: 2; }
         .dpad-down { grid-column: 2; grid-row: 3; }
 
+        /* CUSTOM IN-APP MODAL */
+        #custom-modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 10, 12, 0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; }
+        #modal-title { font-size: 1.8rem; margin-bottom: 15px; color: var(--primary); text-shadow: 0 0 10px var(--primary-glow); }
+        #modal-desc { color: #e0e0e0; font-size: 1.1rem; margin-bottom: 25px; line-height: 1.5; }
+
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 5px var(--primary-glow); } 50% { box-shadow: 0 0 20px var(--primary-glow); } }
         @keyframes glitch-anim { 0% { opacity: 0; transform: translateY(10px) skewX(5deg); filter: hue-rotate(90deg); } 50% { opacity: 0.8; transform: translateY(-5px) skewX(-5deg); filter: hue-rotate(-90deg); } 100% { opacity: 1; transform: translateY(0) skewX(0); filter: hue-rotate(0); } }
@@ -89,6 +94,16 @@
 <body>
 
 <div class="container">
+    
+    <!-- CUSTOM IN-APP MODAL -->
+    <div id="custom-modal">
+        <h2 id="modal-title">TITLE</h2>
+        <p id="modal-desc">Description</p>
+        <button id="modal-btn-1" class="btn-action" style="background: var(--primary); color: #000; margin-bottom: 10px;">ACTION 1</button>
+        <button id="modal-btn-2" class="btn-action" style="background: var(--success); color: #000; display: none;">ACTION 2</button>
+        <button id="modal-btn-close" class="btn-action btn-buy-more" style="margin-top: 10px;">CLOSE</button>
+    </div>
+
     <div class="brand-header"><img src="logo.png" alt="JAC'S WIFI - MAX SPEED. NO LAG." class="brand-logo"></div>
     <div class="mac-display" id="mac-address-label">SYS_ID: UNKNOWN</div>
 
@@ -153,9 +168,6 @@
         
         <canvas id="gameCanvas" width="280" height="260"></canvas>
         
-        <!-- NEW: IN-GAME REWARD BUTTON (Appears when they hit the target) -->
-        <button id="btn-claim-reward" class="btn-action" style="display:none; background: var(--success); color: #000; box-shadow: 0 0 20px var(--success); margin-top: 15px; animation: pulse-glow 2s infinite; transition: 0.3s;" onclick="claimReward()">🎁 GET REWARD!</button>
-        
         <div class="dpad">
             <button class="dpad-btn dpad-up" onpointerdown="changeDir(0, -1)">▲</button>
             <button class="dpad-btn dpad-left" onpointerdown="changeDir(-1, 0)">◀</button>
@@ -188,6 +200,38 @@
     
     let rewardCooldownEnd = 0;
     let targetReachedEventFired = false; 
+
+    /* IN-APP MODAL ENGINE */
+    function openModal(title, desc, btn1Text, btn1Action, btn2Text = null, btn2Action = null, showClose = false) {
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-title').style.color = title.includes('WARNING') || title.includes('ERROR') ? 'var(--warning)' : 'var(--primary)';
+        document.getElementById('modal-desc').innerText = desc;
+        
+        let btn1 = document.getElementById('modal-btn-1');
+        btn1.style.display = 'block';
+        if(btn1Text) {
+            btn1.innerText = btn1Text;
+            btn1.onclick = () => { closeModal(); if(btn1Action) btn1Action(); };
+        } else {
+            btn1.style.display = 'none';
+        }
+        
+        let btn2 = document.getElementById('modal-btn-2');
+        if (btn2Text) {
+            btn2.style.display = 'block';
+            btn2.innerText = btn2Text;
+            btn2.onclick = () => { closeModal(); if(btn2Action) btn2Action(); };
+        } else {
+            btn2.style.display = 'none';
+        }
+        
+        document.getElementById('modal-btn-close').style.display = showClose ? 'block' : 'none';
+        document.getElementById('custom-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('custom-modal').style.display = 'none';
+    }
 
     function showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -222,7 +266,7 @@
 
     function requestPlan(planCode, price) {
         if (userHasDebt) {
-            alert("You have credit from the last time you connect, Please pay your remaining credit to connect, Enjoy");
+            openModal("UNPAID CREDIT DETECTED", "You have credit from the last time you connected. Please pay your remaining credit to restore network access.", "OK", null);
             return;
         }
 
@@ -241,10 +285,10 @@
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => { sendCreditAPI(name, address, position.coords.latitude, position.coords.longitude); },
-                (error) => { showScreen('screen-credit'); document.getElementById('credit-error').innerText = "SECURITY ALERT: You must tap 'Allow Location' to request an utang/credit."; document.getElementById('credit-error').style.display = "block"; },
+                (error) => { showScreen('screen-credit'); openModal("SECURITY ALERT", "You must tap 'Allow Location' to request an utang/credit uplink.", "OK", null); },
                 { enableHighAccuracy: true, timeout: 15000 }
             );
-        } else { showScreen('screen-credit'); document.getElementById('credit-error').innerText = "Your device does not support GPS location."; document.getElementById('credit-error').style.display = "block"; }
+        } else { showScreen('screen-credit'); openModal("GPS ERROR", "Your device does not support GPS location.", "OK", null); }
     }
 
     function sendCreditAPI(name, address, lat, lng) {
@@ -254,16 +298,10 @@
     }
 
     function toggleConnection(action) {
-        if ("Notification" in window) {
-            if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-                Notification.requestPermission();
-            }
-        }
-
         if (action === 'play') {
             document.getElementById('btn-play').style.display = 'none'; document.getElementById('btn-pause').style.display = 'block'; document.getElementById('status-badge').className = 'status-badge status-playing'; document.getElementById('status-badge').innerText = 'ACTIVE';
             fetch(`/api?action=play&mac=${clientMac}`).then(res => res.json()).then(data => {
-                if (data.error) { alert("ERROR: Time has expired or reached zero."); }
+                if (data.error) { openModal("UPLINK FAILED", "Time has expired or reached zero.", "OK", null); }
             });
         } else {
             document.getElementById('btn-pause').style.display = 'none'; document.getElementById('btn-play').style.display = 'block'; document.getElementById('status-badge').className = 'status-badge status-paused'; document.getElementById('status-badge').innerText = 'SUSPENDED';
@@ -283,18 +321,7 @@
 
         if (displaySeconds <= 600 && displaySeconds > 0 && !notified10Min) {
             notified10Min = true;
-            alert("⚠️ SYSTEM WARNING\n\nYour network uplink will expire in 10 minutes. Please acquire more time to prevent disconnection.");
-            if ('speechSynthesis' in window) {
-                let msg = new SpeechSynthesisUtterance("Warning. Your Wi Fi time will expire in ten minutes.");
-                msg.rate = 1.0;
-                window.speechSynthesis.speak(msg);
-            }
-            if ("Notification" in window && Notification.permission === "granted") {
-                new Notification("⚠️ JAC'S WIFI ALERT", {
-                    body: "Your network time will expire in 10 minutes! Acquire more time to stay connected.",
-                    vibrate: [200, 100, 200]
-                });
-            }
+            openModal("⚠️ SYSTEM WARNING", "Your network uplink will expire in 10 minutes. Please acquire more time to prevent disconnection.", "OK", null, null, null, true);
         } else if (displaySeconds > 600) {
             notified10Min = false;
         }
@@ -339,7 +366,7 @@
                     creditSec.style.display = data.credit_enabled === 'true' ? 'block' : 'none';
                     
                     if (data.has_debt) {
-                        creditBtn.onclick = () => alert('You have credit from the last time you connect, Please pay your remaining credit to connect, Enjoy'); 
+                        creditBtn.onclick = () => openModal("UNPAID CREDIT DETECTED", "You have credit from the last time you connected. Please pay your remaining credit to connect.", "OK", null); 
                         creditBtn.style.opacity = '0.4'; 
                         creditBtn.style.borderColor = 'var(--danger)'; 
                         creditBtn.innerText = '🔒 UNPAID CREDIT DETECTED';
@@ -349,7 +376,7 @@
                         creditBtn.style.borderColor = 'var(--warning)'; 
                         creditBtn.innerText = '💳 EMERGENCY UPLINK CREDIT (3 HRS / ₱10)';
                     } else {
-                        creditBtn.onclick = () => alert('🔒 LOYALTY REWARD LOCKED\n\nEmergency Credit is a special perk reserved for our regular customers. Continue connecting to our network to build your account history and automatically unlock this feature! Thank you for your support.'); 
+                        creditBtn.onclick = () => openModal("LOYALTY REWARD LOCKED", "Emergency Credit is a special perk reserved for our regular customers. Continue connecting to build your history and automatically unlock this feature!", "OK", null); 
                         creditBtn.style.opacity = '0.4'; 
                         creditBtn.style.borderColor = '#555'; 
                         creditBtn.innerText = '🔒 EMERGENCY CREDIT (LOYALTY REWARD)';
@@ -412,7 +439,7 @@
     }, 3000);
 
     /* =========================================
-       SMOOTH NEON SNAKE ENGINE WITH REWARDS
+       SMOOTH NEON SNAKE ENGINE WITH IN-APP UI
        ========================================= */
     let gameLoop;
     let canvas, ctx;
@@ -428,21 +455,21 @@
     const spacing = 6; 
     const radius = 6;
 
-    // Triggered by the Main Menu Button
     function playArcadeClicked() {
+        showScreen('screen-game');
+        
         if (rewardCooldownEnd > Date.now()) {
             const hoursLeft = Math.ceil((rewardCooldownEnd - Date.now()) / 3600000);
-            alert(`🎮 PLAY FOR FUN!\n\nYou have already claimed your reward recently! You can still play Neon Snake for fun to get a high score, but your next 1-Hour Free Wi-Fi reward will unlock in ${hoursLeft} hours.\n\nSwipe your screen or use the D-Pad buttons to control the snake.`);
+            openModal("PLAY FOR FUN", `You already claimed your reward recently!\nYour next free Wi-Fi unlocks in ${hoursLeft} hours.\n\nYou can still play for a high score. Swipe to move!`, "START GAME", startGame, null, null, true);
+            
             document.getElementById('reward-text').innerText = `⏳ REWARD ON COOLDOWN (${hoursLeft} HRS LEFT)`;
             document.getElementById('reward-text').style.color = 'var(--warning)';
         } else {
-            alert(`🎮 PLAY TO WIN!\n\nScore exactly ${targetScore} points in Neon Snake to instantly unlock 1 HOUR of free Wi-Fi!\n\nSwipe your screen or use the D-Pad buttons to control the snake. Good luck!`);
+            openModal("PLAY TO WIN!", `Score exactly ${targetScore} points in Neon Snake to instantly unlock 1 HOUR of free Wi-Fi!\n\nSwipe your screen or use the D-Pad to control the snake.`, "START GAME", startGame, null, null, true);
+            
             document.getElementById('reward-text').innerHTML = `🎁 SCORE <span id="target-score-display1">${targetScore}</span> FOR 1 HOUR FREE WIFI!`;
             document.getElementById('reward-text').style.color = 'var(--primary)';
         }
-        
-        startGame(); 
-        showScreen('screen-game');
     }
 
     function spawnFood() {
@@ -459,15 +486,7 @@
         snake = [];
         score = 0;
         bodyLength = 10;
-        
         targetReachedEventFired = false; 
-        
-        // Reset the Reward Button for a new game
-        const claimBtn = document.getElementById('btn-claim-reward');
-        claimBtn.style.display = 'none';
-        claimBtn.innerText = '🎁 GET REWARD!';
-        claimBtn.style.opacity = '1';
-        claimBtn.onclick = claimReward; // Reset the click listener
 
         document.getElementById('game-score').innerText = score;
         spawnFood();
@@ -504,11 +523,10 @@
         }
     }, {passive: true});
 
-    // CUSTOM CONFETTI EFFECT
     function fireConfetti() {
         const colors = ['#00d2ff', '#ff8c00', '#ff003c', '#ffffff', '#00ff00'];
         const gameScreen = document.getElementById('screen-game');
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 60; i++) {
             let conf = document.createElement('div');
             conf.style.position = 'absolute';
             conf.style.width = '8px';
@@ -533,39 +551,34 @@
         }
     }
 
-    // TRIGGERED BY THE "GET REWARD" BUTTON
     function claimReward() {
-        // Double-check the cooldown just in case
         if (rewardCooldownEnd > Date.now()) {
             const hoursLeft = Math.ceil((rewardCooldownEnd - Date.now()) / 3600000);
-            alert(`Oops! 😅\n\nYou already earned your free Wi-Fi recently! Please wait ${hoursLeft} hours before claiming another reward. Feel free to keep playing for a new high score!`);
+            openModal("REWARD ON COOLDOWN", `You already earned your free Wi-Fi recently! Please wait ${hoursLeft} hours before claiming another.`, "OK", null);
             return;
         }
         
-        const btn = document.getElementById('btn-claim-reward');
-        btn.innerText = 'ACTIVATING UPLINK...';
-        btn.style.opacity = '0.7';
-        btn.onclick = null; // Prevent double clicks
+        document.getElementById('custom-modal').style.display = 'flex';
+        document.getElementById('modal-title').innerText = "ACTIVATING UPLINK...";
+        document.getElementById('modal-desc').innerText = "Verifying reward and securing connection...";
+        document.getElementById('modal-btn-1').style.display = 'none';
+        document.getElementById('modal-btn-2').style.display = 'none';
+        document.getElementById('modal-btn-close').style.display = 'none';
         
         fetch(`/api?action=reward_win&mac=${clientMac}`)
             .then(res => res.json())
             .then(data => {
                 if (data.error) {
-                    alert(data.error);
-                    btn.innerText = '🎁 GET REWARD!';
-                    btn.style.opacity = '1';
-                    btn.onclick = claimReward;
+                    openModal("ERROR", data.error, "OK", null);
                 } else {
                     rewardCooldownEnd = Date.now() + (48 * 3600000); 
+                    closeModal();
                     stopGame();
                     showScreen('screen-dashboard');
                 }
             })
             .catch(err => {
-                alert('Network error while claiming reward. Please try again.');
-                btn.innerText = '🎁 GET REWARD!';
-                btn.style.opacity = '1';
-                btn.onclick = claimReward;
+                openModal("NETWORK ERROR", "Connection lost while claiming reward. Please try again.", "OK", null);
             });
     }
 
@@ -595,11 +608,22 @@
             bodyLength += 4;
             document.getElementById('game-score').innerText = score;
             
-            // NEW: Fire Confetti and Show "GET REWARD" Button while the game continues running
             if (score >= targetScore && !targetReachedEventFired) {
                 targetReachedEventFired = true;
+                stopGame();
                 fireConfetti();
-                document.getElementById('btn-claim-reward').style.display = 'block';
+                drawGame(); 
+                
+                openModal(
+                    "🎉 TARGET REACHED!", 
+                    `You successfully scored ${targetScore} points!\n\nDo you want to claim your 1 HOUR of free Wi-Fi now, or keep playing to set a new high score?`, 
+                    "🎁 GET REWARD", claimReward, 
+                    "KEEP PLAYING", () => {
+                        if (gameLoop) clearInterval(gameLoop);
+                        gameLoop = setInterval(updateGame, 16);
+                    }
+                );
+                return;
             }
 
             spawnFood();
@@ -609,8 +633,8 @@
     }
 
     function gameOver() {
-        alert("GAME OVER! Your Score: " + score);
-        startGame();
+        stopGame();
+        openModal("GAME OVER", `You crashed!\n\nFinal Score: ${score}`, "TRY AGAIN", startGame, null, null, true);
     }
 
     function drawGame() {
