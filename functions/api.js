@@ -78,7 +78,6 @@ export async function onRequest(context) {
             const name = url.searchParams.get('name'); const address = url.searchParams.get('address');
             const lat = url.searchParams.get('lat') || ''; const lng = url.searchParams.get('lng') || '';
             
-            // NEW ELIGIBILITY CHECK: Must have spent 300 pesos
             const existingSession = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
             const spent = existingSession ? (existingSession.total_spent || 0) : 0;
             if (spent < 300) return Response.json({ error: 'ACCESS DENIED: You must spend a total of ₱300 to unlock emergency credit.' });
@@ -123,7 +122,7 @@ export async function onRequest(context) {
             const rates = await getRates();
             const minutesBought = rates[plan] ? rates[plan].m : 0;
             const validityHours = rates[plan] ? (rates[plan].v || 24) : 24;
-            const amountPaid = rates[plan] ? rates[plan].p : 0; // NEW: Get plan price
+            const amountPaid = rates[plan] ? rates[plan].p : 0; 
             const addedTimeMs = validityHours * 3600000;
 
             const existingSession = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
@@ -131,11 +130,9 @@ export async function onRequest(context) {
             if (existingSession) {
                 let baseTime = (existingSession.expires_at && existingSession.expires_at > Date.now()) ? existingSession.expires_at : Date.now();
                 let newExpiresAt = baseTime + addedTimeMs;
-                // NEW: Add amountPaid to total_spent
                 await env.DB.prepare("UPDATE wifi_sessions SET total_minutes_bought = total_minutes_bought + ?, status = 'paused', purchase_count = COALESCE(purchase_count, 0) + 1, total_spent = COALESCE(total_spent, 0) + ?, expires_at = ? WHERE client_mac = ?").bind(minutesBought, amountPaid, newExpiresAt, mac).run();
             } else {
                 let newExpiresAt = Date.now() + addedTimeMs;
-                // NEW: Save amountPaid as total_spent
                 await env.DB.prepare("INSERT INTO wifi_sessions (client_mac, total_minutes_bought, minutes_used, status, purchase_count, total_spent, expires_at) VALUES (?, ?, 0, 'paused', 1, ?, ?)").bind(mac, minutesBought, amountPaid, newExpiresAt).run();
             }
 
@@ -147,11 +144,13 @@ export async function onRequest(context) {
             await env.DB.prepare("DELETE FROM digital_queue WHERE client_mac = ?").bind(mac).run();
             return Response.json({ success: true });
         }
+        
         if (action === 'admin_suspend') {
             const session = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
             if (session && session.status === 'playing' && session.last_play_time) {
-                const startTime = new Date(session.last_play_time + 'Z').getTime(); 
-                const minutesPlayed = Math.floor((Date.now() - startTime) / 60000);
+                // FIXED: Replace space with T to prevent NaN crash, removed Math.floor for exact seconds tracking
+                const startTime = new Date(session.last_play_time.replace(' ', 'T') + 'Z').getTime(); 
+                const minutesPlayed = (Date.now() - startTime) / 60000;
                 const newTotalUsed = session.minutes_used + minutesPlayed;
                 await env.DB.prepare("UPDATE wifi_sessions SET status = 'paused', minutes_used = ? WHERE client_mac = ?").bind(newTotalUsed, mac).run();
             }
@@ -164,10 +163,8 @@ export async function onRequest(context) {
 
             const rates = await getRates();
             let sessionAll = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
-            
             sessionAll = await checkExpiration(sessionAll);
 
-            // NEW ELIGIBILITY CHECK: Must have spent 300 pesos
             const spent = sessionAll ? (sessionAll.total_spent || 0) : 0;
             const isEligible = spent >= 300;
 
@@ -211,8 +208,10 @@ export async function onRequest(context) {
         if (action === 'pause') {
             const session = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
             if (session && session.status === 'playing' && session.last_play_time) {
-                const startTime = new Date(session.last_play_time + 'Z').getTime();
-                const newTotalUsed = session.minutes_used + Math.floor((Date.now() - startTime) / 60000);
+                // FIXED: Replace space with T to prevent NaN crash, removed Math.floor for exact seconds tracking
+                const startTime = new Date(session.last_play_time.replace(' ', 'T') + 'Z').getTime();
+                const minutesPlayed = (Date.now() - startTime) / 60000;
+                const newTotalUsed = session.minutes_used + minutesPlayed;
                 await env.DB.prepare("UPDATE wifi_sessions SET status = 'paused', minutes_used = ? WHERE client_mac = ?").bind(newTotalUsed, mac).run();
             }
             return Response.json({ success: true, status: 'paused' });
