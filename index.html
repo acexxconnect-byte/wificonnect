@@ -14,10 +14,8 @@
             --dark: #0a0a0c; --panel-bg: #111116; --light: #e0e0e0; --grid-color: rgba(0, 210, 255, 0.1);
         }
         
-        /* MOBILE OPTIMIZATIONS: Box sizing and preventing tap highlights */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        /* MOBILE OPTIMIZATIONS: Prevent pull-to-refresh on swipe */
         body { font-family: 'Rajdhani', sans-serif; background-color: var(--dark); color: var(--light); margin: 0; padding: 15px; display: flex; justify-content: center; min-height: 100vh; align-items: center; background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px); background-size: 30px 30px; background-position: center center; overscroll-behavior-y: none; }
         
         .container { background: var(--panel-bg); width: 100%; max-width: 400px; border-radius: 4px; border: 1px solid rgba(0, 210, 255, 0.2); box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 10px var(--primary-glow); padding: 25px 20px; text-align: center; position: relative; overflow: hidden; }
@@ -36,7 +34,6 @@
         
         .grid-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         
-        /* MOBILE OPTIMIZATIONS: Fast tap response */
         .btn-rate, .btn-action, .dpad-btn { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
         
         .btn-rate { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(0, 210, 255, 0.3); color: var(--light); padding: 15px 5px; border-radius: 2px; cursor: pointer; font-weight: 700; font-size: 1.1rem; font-family: 'Rajdhani', sans-serif; transition: all 0.2s ease; position: relative; overflow: hidden; text-transform: uppercase; }
@@ -66,7 +63,7 @@
         #queue-message { font-size: 1.1rem; color: #a8b2d1; }
         
         /* OFFLINE ARCADE STYLES */
-        #gameCanvas { background: #000; border: 2px solid var(--primary); border-radius: 4px; box-shadow: 0 0 15px var(--primary-glow); margin: 10px auto; display: block; touch-action: none; max-width: 100%; height: auto; }
+        #gameCanvas { background: #000; border: 2px solid var(--primary); border-radius: 4px; box-shadow: 0 0 15px var(--primary-glow); margin: 10px auto; display: block; touch-action: none; max-width: 100%; height: auto; position: relative; z-index: 2;}
         .dpad { display: grid; grid-template-columns: 60px 60px 60px; grid-template-rows: 60px 60px 60px; gap: 5px; justify-content: center; margin-top: 15px; margin-bottom: 15px; }
         .dpad-btn { background: rgba(0, 210, 255, 0.1); border: 1px solid var(--primary); color: var(--primary); font-size: 24px; border-radius: 4px; cursor: pointer; box-shadow: inset 0 0 5px var(--primary-glow); display: flex; align-items: center; justify-content: center; }
         .dpad-btn:active { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary-glow); }
@@ -80,7 +77,6 @@
         @keyframes glitch-anim { 0% { opacity: 0; transform: translateY(10px) skewX(5deg); filter: hue-rotate(90deg); } 50% { opacity: 0.8; transform: translateY(-5px) skewX(-5deg); filter: hue-rotate(-90deg); } 100% { opacity: 1; transform: translateY(0) skewX(0); filter: hue-rotate(0); } }
         body::after { content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 140, 0, 0.04), rgba(0, 210, 255, 0.04), rgba(0, 0, 0, 0)); z-index: 999; background-size: 100% 2px, 3px 100%; pointer-events: none; }
 
-        /* MOBILE BREAKPOINT FOR VERY SMALL SCREENS */
         @media (max-width: 380px) {
             .grid-menu { grid-template-columns: 1fr; }
             .time-display { font-size: 2.2rem; }
@@ -149,12 +145,16 @@
         <button class="btn-action btn-buy-more" onclick="showScreen('screen-menu')" style="margin-top: 15px;">AQUIRE MORE TIME</button>
     </div>
 
-    <div id="screen-game" class="screen">
+    <div id="screen-game" class="screen" style="position: relative;">
         <h2 style="color: var(--secondary); text-shadow: 0 0 10px var(--secondary-glow);">NEON SNAKE</h2>
-        <p style="color: var(--primary); font-size: 0.9rem; font-weight: bold; margin-top: -10px;">🎁 SCORE <span id="target-score-display1">200</span> FOR 1 HOUR FREE WIFI!</p>
+        
+        <p id="reward-text" style="color: var(--primary); font-size: 0.9rem; font-weight: bold; margin-top: -10px;">🎁 SCORE <span id="target-score-display1">200</span> FOR 1 HOUR FREE WIFI!</p>
         <p style="color: #8892b0; font-size: 0.8rem; margin-top: -5px;">Current Score: <span id="game-score" style="color: var(--success); font-weight: bold; font-size: 1rem;">0</span> / <span id="target-score-display2">200</span></p>
         
         <canvas id="gameCanvas" width="280" height="260"></canvas>
+        
+        <!-- NEW: IN-GAME REWARD BUTTON (Appears when they hit the target) -->
+        <button id="btn-claim-reward" class="btn-action" style="display:none; background: var(--success); color: #000; box-shadow: 0 0 20px var(--success); margin-top: 15px; animation: pulse-glow 2s infinite; transition: 0.3s;" onclick="claimReward()">🎁 GET REWARD!</button>
         
         <div class="dpad">
             <button class="dpad-btn dpad-up" onpointerdown="changeDir(0, -1)">▲</button>
@@ -185,6 +185,9 @@
     let currentRatesString = '';
     let userHasDebt = false; 
     let targetScore = 200;
+    
+    let rewardCooldownEnd = 0;
+    let targetReachedEventFired = false; 
 
     function showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -327,7 +330,8 @@
                     document.getElementById('target-score-display1').innerText = targetScore;
                     document.getElementById('target-score-display2').innerText = targetScore;
                 }
-
+                
+                rewardCooldownEnd = data.reward_cooldown || 0;
                 userHasDebt = data.has_debt || false;
 
                 const creditSec = document.getElementById('credit-section'); const creditBtn = document.getElementById('btn-credit-request');
@@ -408,7 +412,7 @@
     }, 3000);
 
     /* =========================================
-       SMOOTH NEON SNAKE ENGINE (60 FPS)
+       SMOOTH NEON SNAKE ENGINE WITH REWARDS
        ========================================= */
     let gameLoop;
     let canvas, ctx;
@@ -424,8 +428,19 @@
     const spacing = 6; 
     const radius = 6;
 
+    // Triggered by the Main Menu Button
     function playArcadeClicked() {
-        alert(`🎮 PLAY TO WIN!\n\nScore exactly ${targetScore} points in Neon Snake to instantly unlock 1 HOUR of free Wi-Fi!\n\nSwipe your screen or use the D-Pad buttons to control the snake. Good luck!`);
+        if (rewardCooldownEnd > Date.now()) {
+            const hoursLeft = Math.ceil((rewardCooldownEnd - Date.now()) / 3600000);
+            alert(`🎮 PLAY FOR FUN!\n\nYou have already claimed your reward recently! You can still play Neon Snake for fun to get a high score, but your next 1-Hour Free Wi-Fi reward will unlock in ${hoursLeft} hours.\n\nSwipe your screen or use the D-Pad buttons to control the snake.`);
+            document.getElementById('reward-text').innerText = `⏳ REWARD ON COOLDOWN (${hoursLeft} HRS LEFT)`;
+            document.getElementById('reward-text').style.color = 'var(--warning)';
+        } else {
+            alert(`🎮 PLAY TO WIN!\n\nScore exactly ${targetScore} points in Neon Snake to instantly unlock 1 HOUR of free Wi-Fi!\n\nSwipe your screen or use the D-Pad buttons to control the snake. Good luck!`);
+            document.getElementById('reward-text').innerHTML = `🎁 SCORE <span id="target-score-display1">${targetScore}</span> FOR 1 HOUR FREE WIFI!`;
+            document.getElementById('reward-text').style.color = 'var(--primary)';
+        }
+        
         startGame(); 
         showScreen('screen-game');
     }
@@ -444,6 +459,16 @@
         snake = [];
         score = 0;
         bodyLength = 10;
+        
+        targetReachedEventFired = false; 
+        
+        // Reset the Reward Button for a new game
+        const claimBtn = document.getElementById('btn-claim-reward');
+        claimBtn.style.display = 'none';
+        claimBtn.innerText = '🎁 GET REWARD!';
+        claimBtn.style.opacity = '1';
+        claimBtn.onclick = claimReward; // Reset the click listener
+
         document.getElementById('game-score').innerText = score;
         spawnFood();
         
@@ -479,6 +504,71 @@
         }
     }, {passive: true});
 
+    // CUSTOM CONFETTI EFFECT
+    function fireConfetti() {
+        const colors = ['#00d2ff', '#ff8c00', '#ff003c', '#ffffff', '#00ff00'];
+        const gameScreen = document.getElementById('screen-game');
+        for (let i = 0; i < 50; i++) {
+            let conf = document.createElement('div');
+            conf.style.position = 'absolute';
+            conf.style.width = '8px';
+            conf.style.height = '8px';
+            conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            conf.style.left = Math.random() * 100 + '%';
+            conf.style.top = '-10px';
+            conf.style.opacity = 1;
+            conf.style.zIndex = 1000;
+            conf.style.transition = 'top 3s linear, transform 3s ease-in-out, opacity 3s';
+            gameScreen.appendChild(conf);
+
+            setTimeout(() => {
+                conf.style.top = '120%';
+                conf.style.transform = `rotate(${Math.random() * 720}deg) translateX(${Math.random() * 50 - 25}px)`;
+                conf.style.opacity = 0;
+            }, 50);
+
+            setTimeout(() => {
+                if (conf.parentNode) conf.parentNode.removeChild(conf);
+            }, 3050);
+        }
+    }
+
+    // TRIGGERED BY THE "GET REWARD" BUTTON
+    function claimReward() {
+        // Double-check the cooldown just in case
+        if (rewardCooldownEnd > Date.now()) {
+            const hoursLeft = Math.ceil((rewardCooldownEnd - Date.now()) / 3600000);
+            alert(`Oops! 😅\n\nYou already earned your free Wi-Fi recently! Please wait ${hoursLeft} hours before claiming another reward. Feel free to keep playing for a new high score!`);
+            return;
+        }
+        
+        const btn = document.getElementById('btn-claim-reward');
+        btn.innerText = 'ACTIVATING UPLINK...';
+        btn.style.opacity = '0.7';
+        btn.onclick = null; // Prevent double clicks
+        
+        fetch(`/api?action=reward_win&mac=${clientMac}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    btn.innerText = '🎁 GET REWARD!';
+                    btn.style.opacity = '1';
+                    btn.onclick = claimReward;
+                } else {
+                    rewardCooldownEnd = Date.now() + (48 * 3600000); 
+                    stopGame();
+                    showScreen('screen-dashboard');
+                }
+            })
+            .catch(err => {
+                alert('Network error while claiming reward. Please try again.');
+                btn.innerText = '🎁 GET REWARD!';
+                btn.style.opacity = '1';
+                btn.onclick = claimReward;
+            });
+    }
+
     function updateGame() {
         currentDir = nextDir;
         head.x += currentDir.dx;
@@ -505,19 +595,11 @@
             bodyLength += 4;
             document.getElementById('game-score').innerText = score;
             
-            if (score >= targetScore) {
-                stopGame(); 
-                
-                drawGame(); 
-                setTimeout(() => {
-                    alert(`🎉 CONGRATULATIONS!\n\nYou scored ${targetScore} points! You have won 1 HOUR of free Wi-Fi! Activating your uplink now...`);
-                    
-                    fetch(`/api?action=reward_win&mac=${clientMac}`)
-                        .then(() => {
-                            showScreen('screen-dashboard');
-                        });
-                }, 50);
-                return;
+            // NEW: Fire Confetti and Show "GET REWARD" Button while the game continues running
+            if (score >= targetScore && !targetReachedEventFired) {
+                targetReachedEventFired = true;
+                fireConfetti();
+                document.getElementById('btn-claim-reward').style.display = 'block';
             }
 
             spawnFood();
