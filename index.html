@@ -193,7 +193,7 @@
         }
 
         if (action === 'play') {
-            document.getElementById('btn-play').style.display = 'none'; document.getElementById('btn-pause').style.display = 'block'; document.getElementById('status-badge').className = 'status-badge status-playing'; document.getElementById('status-badge').innerText = 'ACTIVE';
+            document.getElementById('btn-play').style.display = 'none'; document.getElementById('btn-pause').style.display = 'block'; document.getElementById('status-badge').className = 'status-badge status-playing'; document.getElementById('status-badge').innerText = 'CONNECTING TO ACTIVATE';
             fetch(`/api?action=play&mac=${clientMac}`).then(res => res.json()).then(data => {
                 if (data.error) { alert("ERROR: Time has expired or reached zero."); }
             });
@@ -293,7 +293,7 @@
                         cachedSecondsLeft = Math.round((session.total_minutes_bought * 60) - (session.minutes_used * 60)) - secondsPlayed; 
                         sessionEndTime = Date.now() + (cachedSecondsLeft * 1000); 
                         isPlaying = true;
-                        document.getElementById('status-badge').className = 'status-badge status-playing'; document.getElementById('status-badge').innerText = 'UPLINK ACTIVE'; document.getElementById('btn-play').style.display = 'none'; document.getElementById('btn-pause').style.display = 'block';
+                        document.getElementById('status-badge').className = 'status-badge status-playing'; document.getElementById('status-badge').innerText = 'UPLINK ACTIVATED'; document.getElementById('btn-play').style.display = 'none'; document.getElementById('btn-pause').style.display = 'block';
                     } else {
                         cachedSecondsLeft = Math.round((session.total_minutes_bought * 60) - (session.minutes_used * 60)); 
                         isPlaying = false;
