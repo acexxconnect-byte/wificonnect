@@ -86,19 +86,21 @@
 
         <div id="credit-section" style="display: none;">
             <div class="tier-header credit-header">>> EMERGENCY UPLINK <<</div>
-            <button id="btn-credit-request" class="btn-action" style="background: transparent; border: 1px solid var(--warning); color: var(--warning);">REQUEST 3 HRS CREDIT (₱10)</button>
+            <button id="btn-credit-request" class="btn-action" style="background: transparent; border: 1px solid var(--warning); color: var(--warning);">WIFI NOW, BAYAD LATER! (Utang 3 Hrs / ₱10)</button>
         </div>
         <button id="btn-back-dash" class="btn-action btn-buy-more" style="display:none; margin-top: 20px;" onclick="showScreen('screen-dashboard')">RETURN TO DASHBOARD</button>
     </div>
 
     <!-- SCREEN 3: CREDIT FORM -->
     <div id="screen-credit" class="screen">
-        <h2 style="color: var(--warning); text-shadow: 0 0 10px rgba(255, 0, 60, 0.5);">CREDIT AUTH</h2>
-        <p style="color: #8892b0; font-size: 0.9rem; margin-bottom: 20px;">Admin is currently AWAY. Enter details to activate a 3-hour emergency uplink. Pay ₱10 later.</p>
-        <input type="text" id="credit-name" class="input-field" placeholder="Full Name (Required)">
-        <input type="text" id="credit-address" class="input-field" placeholder="Specific Address (Required)">
+        <h2 style="color: var(--warning); text-shadow: 0 0 10px rgba(255, 0, 60, 0.5);">UTANG WIFI</h2>
+        <p style="color: #8892b0; font-size: 0.9rem; margin-bottom: 20px;">Wala pa'y ikabayad? Sige, connect sa ta karon! Ibutang ang imong detalye para sa 3-hour emergency uplink. Bayad lang unya og ₱10.</p>
+        
+        <input type="text" id="credit-name" class="input-field" placeholder="Full Name (Pangalan sa mangutang)">
+        <input type="text" id="credit-address" class="input-field" placeholder="Specific Address (Asa dapit?)">
         <p id="credit-error" style="color: var(--warning); font-size: 0.9rem; display: none; font-weight: bold;"></p>
-        <button class="btn-action" style="background: var(--warning); color: white;" onclick="submitCredit()">ACTIVATE UPLINK</button>
+        
+        <button class="btn-action" style="background: var(--warning); color: white;" onclick="submitCredit()">UTANG NOW</button>
         <button class="btn-action btn-buy-more" onclick="showScreen('screen-menu')">CANCEL</button>
     </div>
 
@@ -184,7 +186,6 @@
     }
 
     function toggleConnection(action) {
-        // Ask for System Notification Permission when they click "ENGAGE UPLINK"
         if ("Notification" in window) {
             if (Notification.permission !== "granted" && Notification.permission !== "denied") {
                 Notification.requestPermission();
@@ -212,37 +213,28 @@
         if (isPlaying && sessionEndTime) { displaySeconds = Math.floor((sessionEndTime - Date.now()) / 1000); } else { displaySeconds = cachedSecondsLeft; }
         if (displaySeconds < 0) displaySeconds = 0;
 
-        // 10-MINUTE WARNING LOGIC
         if (displaySeconds <= 600 && displaySeconds > 0 && !notified10Min) {
             notified10Min = true;
-            
-            // 1. Text Alert (If browser is open)
             alert("⚠️ SYSTEM WARNING\n\nYour network uplink will expire in 10 minutes. Please acquire more time to prevent disconnection.");
-            
-            // 2. VOICE ALARM (If browser is open)
             if ('speechSynthesis' in window) {
                 let msg = new SpeechSynthesisUtterance("Warning. Your Wi Fi time will expire in ten minutes.");
                 msg.rate = 1.0;
                 window.speechSynthesis.speak(msg);
             }
-
-            // 3. SYSTEM NOTIFICATION (Shows as a drop-down banner while playing games!)
             if ("Notification" in window && Notification.permission === "granted") {
                 new Notification("⚠️ JAC'S WIFI ALERT", {
                     body: "Your network time will expire in 10 minutes! Acquire more time to stay connected.",
                     vibrate: [200, 100, 200]
                 });
             }
-
         } else if (displaySeconds > 600) {
-            notified10Min = false; // Reset if they buy more time
+            notified10Min = false;
         }
 
         const days = Math.floor(displaySeconds / 86400); const hours = Math.floor((displaySeconds % 86400) / 3600); const mins = Math.floor((displaySeconds % 3600) / 60); const secs = displaySeconds % 60;
         const timeLabel = document.getElementById('time-label'); const timeDisplay = document.getElementById('time-remaining');
         if (!timeLabel || !timeDisplay) return;
 
-        // Turn clock red when under 10 minutes
         if (displaySeconds <= 600 && displaySeconds > 0) {
             timeDisplay.style.color = "var(--warning)";
             timeDisplay.style.textShadow = "0 0 15px rgba(255, 0, 60, 0.8)";
@@ -266,9 +258,16 @@
                 if (creditSec && creditBtn) {
                     creditSec.style.display = data.credit_enabled === 'true' ? 'block' : 'none';
                     if (data.eligible) {
-                        creditBtn.onclick = () => showScreen('screen-credit'); creditBtn.style.opacity = '1'; creditBtn.style.borderColor = 'var(--warning)'; creditBtn.innerText = 'REQUEST 3 HRS CREDIT (₱10)';
+                        creditBtn.onclick = () => showScreen('screen-credit'); 
+                        creditBtn.style.opacity = '1'; 
+                        creditBtn.style.borderColor = 'var(--warning)'; 
+                        creditBtn.innerText = 'WIFI NOW, BAYAD LATER! (Utang 3 Hrs / ₱10)';
                     } else {
-                        creditBtn.onclick = () => alert('🔒 LOYALTY REWARD LOCKED\n\nYou must purchase a Wi-Fi plan at least 3 times to unlock the Emergency Credit feature. Thank you for your support!'); creditBtn.style.opacity = '0.4'; creditBtn.style.borderColor = '#555'; creditBtn.innerText = '🔒 CREDIT LOCKED (NEEDS 3 PURCHASES)';
+                        // UPDATED: Friendly localized rejection message
+                        creditBtn.onclick = () => alert('🔒 SORRY LODS!\n\nKailangan maka-gasto ka og ₱300 sa atong WiFi para ma-unlock ang Utang feature. Padayon lang og connect, ma-unlock ra ni nimo puhon!'); 
+                        creditBtn.style.opacity = '0.4'; 
+                        creditBtn.style.borderColor = '#555'; 
+                        creditBtn.innerText = '🔒 DI PA PWEDE LODS (Gasto sa\'g ₱300)';
                     }
                 }
                 if (data.credit_enabled !== 'true' && document.getElementById('screen-credit').classList.contains('active')) { showScreen('screen-menu'); }
