@@ -54,7 +54,6 @@ export async function onRequest(context) {
             return Response.json({ success: true });
         }
 
-        // NEW: Endpoint to save Arcade Target Score
         if (action === 'admin_save_arcade') {
             const ts = url.searchParams.get('target');
             await env.DB.prepare("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('arcade_target_score', ?)").bind(ts).run();
@@ -88,13 +87,19 @@ export async function onRequest(context) {
             const existingSession = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
             const addedTimeMs = 24 * 3600000; 
             const rewardMins = 60; 
+            const cooldownMs = 48 * 3600000; // 48 HOURS
             
             if (existingSession) {
+                // SERVER-SIDE SECURITY: Block if played within 48 hours
+                if (existingSession.last_reward_time && Date.now() < existingSession.last_reward_time + cooldownMs) {
+                    return Response.json({ error: 'Reward on cooldown' }, { status: 400 });
+                }
+                
                 let baseTime = (existingSession.expires_at && existingSession.expires_at > Date.now()) ? existingSession.expires_at : Date.now();
-                await env.DB.prepare("UPDATE wifi_sessions SET total_minutes_bought = total_minutes_bought + ?, status = 'paused', expires_at = ? WHERE client_mac = ?").bind(rewardMins, baseTime + addedTimeMs, mac).run();
+                await env.DB.prepare("UPDATE wifi_sessions SET total_minutes_bought = total_minutes_bought + ?, status = 'paused', expires_at = ?, last_reward_time = ? WHERE client_mac = ?").bind(rewardMins, baseTime + addedTimeMs, Date.now(), mac).run();
             } else {
                 let newExpiresAt = Date.now() + addedTimeMs;
-                await env.DB.prepare("INSERT INTO wifi_sessions (client_mac, total_minutes_bought, minutes_used, status, purchase_count, total_spent, expires_at) VALUES (?, ?, 0, 'paused', 0, 0, ?)").bind(mac, rewardMins, newExpiresAt).run();
+                await env.DB.prepare("INSERT INTO wifi_sessions (client_mac, total_minutes_bought, minutes_used, status, purchase_count, total_spent, expires_at, last_reward_time) VALUES (?, ?, 0, 'paused', 0, 0, ?, ?)").bind(mac, rewardMins, newExpiresAt, Date.now()).run();
             }
             await env.DB.prepare("DELETE FROM digital_queue WHERE client_mac = ?").bind(mac).run();
             return Response.json({ success: true });
@@ -199,6 +204,12 @@ export async function onRequest(context) {
 
             const existingDebt = await env.DB.prepare("SELECT * FROM credits_log WHERE client_mac = ?").bind(mac).first();
             const hasDebt = existingDebt ? true : false;
+            
+            // Calculate Active Cooldown Timestamp
+            let rewardCooldown = 0;
+            if (sessionAll && sessionAll.last_reward_time && Date.now() < sessionAll.last_reward_time + (48 * 3600000)) {
+                rewardCooldown = sessionAll.last_reward_time + (48 * 3600000);
+            }
 
             const queue = await env.DB.prepare("SELECT * FROM digital_queue WHERE client_mac = ?").bind(mac).first();
             if (queue) {
@@ -207,14 +218,14 @@ export async function onRequest(context) {
                     const ahead = await env.DB.prepare("SELECT COUNT(*) as count FROM digital_queue WHERE status = 'waiting' AND joined_at < ?").bind(queue.joined_at).first();
                     position = ahead.count + 1;
                 }
-                return Response.json({ type: 'queue', data: queue, position: position, credit_enabled: creditEnabled, eligible: isEligible, rates: rates, has_debt: hasDebt, arcade_target: arcadeTarget });
+                return Response.json({ type: 'queue', data: queue, position: position, credit_enabled: creditEnabled, eligible: isEligible, rates: rates, has_debt: hasDebt, arcade_target: arcadeTarget, reward_cooldown: rewardCooldown });
             }
 
             if (sessionAll && sessionAll.total_minutes_bought > sessionAll.minutes_used) {
-                return Response.json({ type: 'dashboard', data: sessionAll, credit_enabled: creditEnabled, eligible: isEligible, rates: rates, has_debt: hasDebt, arcade_target: arcadeTarget });
+                return Response.json({ type: 'dashboard', data: sessionAll, credit_enabled: creditEnabled, eligible: isEligible, rates: rates, has_debt: hasDebt, arcade_target: arcadeTarget, reward_cooldown: rewardCooldown });
             }
 
-            return Response.json({ type: 'none', credit_enabled: creditEnabled, eligible: isEligible, rates: rates, has_debt: hasDebt, arcade_target: arcadeTarget });
+            return Response.json({ type: 'none', credit_enabled: creditEnabled, eligible: isEligible, rates: rates, has_debt: hasDebt, arcade_target: arcadeTarget, reward_cooldown: rewardCooldown });
         }
 
         if (action === 'join') {
