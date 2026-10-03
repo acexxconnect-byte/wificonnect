@@ -264,7 +264,6 @@
                         creditBtn.style.borderColor = 'var(--warning)'; 
                         creditBtn.innerText = '💳 EMERGENCY UPLINK CREDIT (3 HRS / ₱10)';
                     } else {
-                        // PROFESSIONAL BUSINESS TONE REJECTION TEXT
                         creditBtn.onclick = () => alert('🔒 LOYALTY REWARD LOCKED\n\nEmergency Credit is a special perk reserved for our regular customers. Continue connecting to our network to build your account history and automatically unlock this feature! Thank you for your support.'); 
                         creditBtn.style.opacity = '0.4'; 
                         creditBtn.style.borderColor = '#555'; 
@@ -287,12 +286,17 @@
                         expBadge.innerText = '';
                     }
 
+                    // FIXED: Replaced ' ' with 'T' to prevent NaN math crashes on mobile devices, rounded precision
                     if (session.status === 'playing') {
-                        const startTime = new Date(session.last_play_time + 'Z').getTime(); const secondsPlayed = Math.floor((Date.now() - startTime) / 1000);
-                        cachedSecondsLeft = (session.total_minutes_bought * 60) - (session.minutes_used * 60) - secondsPlayed; sessionEndTime = Date.now() + (cachedSecondsLeft * 1000); isPlaying = true;
+                        const startTime = new Date(session.last_play_time.replace(' ', 'T') + 'Z').getTime(); 
+                        const secondsPlayed = Math.floor((Date.now() - startTime) / 1000);
+                        cachedSecondsLeft = Math.round((session.total_minutes_bought * 60) - (session.minutes_used * 60)) - secondsPlayed; 
+                        sessionEndTime = Date.now() + (cachedSecondsLeft * 1000); 
+                        isPlaying = true;
                         document.getElementById('status-badge').className = 'status-badge status-playing'; document.getElementById('status-badge').innerText = 'UPLINK ACTIVE'; document.getElementById('btn-play').style.display = 'none'; document.getElementById('btn-pause').style.display = 'block';
                     } else {
-                        cachedSecondsLeft = (session.total_minutes_bought * 60) - (session.minutes_used * 60); isPlaying = false;
+                        cachedSecondsLeft = Math.round((session.total_minutes_bought * 60) - (session.minutes_used * 60)); 
+                        isPlaying = false;
                         document.getElementById('status-badge').className = 'status-badge status-paused'; document.getElementById('status-badge').innerText = 'SUSPENDED'; document.getElementById('btn-pause').style.display = 'none'; document.getElementById('btn-play').style.display = 'block';
                     }
                 } 
