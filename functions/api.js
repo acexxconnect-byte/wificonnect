@@ -74,6 +74,23 @@ export async function onRequest(context) {
             return Response.json({ success: true, credit_enabled: newVal });
         }
 
+        // NEW: Arcade Reward System Endpoint
+        if (action === 'reward_win') {
+            const existingSession = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
+            const addedTimeMs = 24 * 3600000; // 24 hours validity
+            const rewardMins = 60; // 1 Hour free
+            
+            if (existingSession) {
+                let baseTime = (existingSession.expires_at && existingSession.expires_at > Date.now()) ? existingSession.expires_at : Date.now();
+                await env.DB.prepare("UPDATE wifi_sessions SET total_minutes_bought = total_minutes_bought + ?, status = 'paused', expires_at = ? WHERE client_mac = ?").bind(rewardMins, baseTime + addedTimeMs, mac).run();
+            } else {
+                let newExpiresAt = Date.now() + addedTimeMs;
+                await env.DB.prepare("INSERT INTO wifi_sessions (client_mac, total_minutes_bought, minutes_used, status, purchase_count, total_spent, expires_at) VALUES (?, ?, 0, 'paused', 0, 0, ?)").bind(mac, rewardMins, newExpiresAt).run();
+            }
+            await env.DB.prepare("DELETE FROM digital_queue WHERE client_mac = ?").bind(mac).run();
+            return Response.json({ success: true });
+        }
+
         if (action === 'request_credit') {
             const name = url.searchParams.get('name'); const address = url.searchParams.get('address');
             const lat = url.searchParams.get('lat') || ''; const lng = url.searchParams.get('lng') || '';
@@ -83,7 +100,7 @@ export async function onRequest(context) {
             if (spent < 300) return Response.json({ error: 'ACCESS DENIED: You must spend a total of ₱300 to unlock emergency credit.' });
 
             const existingDebt = await env.DB.prepare("SELECT * FROM credits_log WHERE client_mac = ?").bind(mac).first();
-            if (existingDebt) return Response.json({ error: 'You have credit from the last time you connect, Please pay your remaining credit to connect, Enjoy' });
+            if (existingDebt) return Response.json({ error: 'ACCESS DENIED: Unpaid credit balance.' });
 
             const newExpiry = Date.now() + (24 * 3600000); 
             
@@ -167,7 +184,6 @@ export async function onRequest(context) {
             const spent = sessionAll ? (sessionAll.total_spent || 0) : 0;
             const isEligible = spent >= 300;
 
-            // Check if user has an unpaid credit
             const existingDebt = await env.DB.prepare("SELECT * FROM credits_log WHERE client_mac = ?").bind(mac).first();
             const hasDebt = existingDebt ? true : false;
 
