@@ -86,21 +86,21 @@
 
         <div id="credit-section" style="display: none;">
             <div class="tier-header credit-header">>> EMERGENCY UPLINK <<</div>
-            <button id="btn-credit-request" class="btn-action" style="background: transparent; border: 1px solid var(--warning); color: var(--warning);">WIFI NOW, BAYAD LATER! (Utang 3 Hrs / ₱10)</button>
+            <button id="btn-credit-request" class="btn-action" style="background: transparent; border: 1px solid var(--warning); color: var(--warning);">💳 EMERGENCY UPLINK CREDIT (3 HRS / ₱10)</button>
         </div>
         <button id="btn-back-dash" class="btn-action btn-buy-more" style="display:none; margin-top: 20px;" onclick="showScreen('screen-dashboard')">RETURN TO DASHBOARD</button>
     </div>
 
     <!-- SCREEN 3: CREDIT FORM -->
     <div id="screen-credit" class="screen">
-        <h2 style="color: var(--warning); text-shadow: 0 0 10px rgba(255, 0, 60, 0.5);">UTANG WIFI</h2>
-        <p style="color: #8892b0; font-size: 0.9rem; margin-bottom: 20px;">Wala pa'y ikabayad? Sige, connect sa ta karon! Ibutang ang imong detalye para sa 3-hour emergency uplink. Bayad lang unya og ₱10.</p>
+        <h2 style="color: var(--warning); text-shadow: 0 0 10px rgba(255, 0, 60, 0.5);">EMERGENCY CREDIT AUTH</h2>
+        <p style="color: #8892b0; font-size: 0.95rem; margin-bottom: 20px; line-height: 1.4;">Need more time? Activate a 3-hour emergency network uplink now and settle your ₱10 balance later. Please verify your identity below.</p>
         
-        <input type="text" id="credit-name" class="input-field" placeholder="Full Name (Pangalan sa mangutang)">
-        <input type="text" id="credit-address" class="input-field" placeholder="Specific Address (Asa dapit?)">
+        <input type="text" id="credit-name" class="input-field" placeholder="Full Name (Required)">
+        <input type="text" id="credit-address" class="input-field" placeholder="Specific Address (Required)">
         <p id="credit-error" style="color: var(--warning); font-size: 0.9rem; display: none; font-weight: bold;"></p>
         
-        <button class="btn-action" style="background: var(--warning); color: white;" onclick="submitCredit()">UTANG NOW</button>
+        <button class="btn-action" style="background: var(--warning); color: white;" onclick="submitCredit()">ACTIVATE UPLINK</button>
         <button class="btn-action btn-buy-more" onclick="showScreen('screen-menu')">CANCEL</button>
     </div>
 
@@ -257,17 +257,18 @@
                 const creditSec = document.getElementById('credit-section'); const creditBtn = document.getElementById('btn-credit-request');
                 if (creditSec && creditBtn) {
                     creditSec.style.display = data.credit_enabled === 'true' ? 'block' : 'none';
+                    
                     if (data.eligible) {
                         creditBtn.onclick = () => showScreen('screen-credit'); 
                         creditBtn.style.opacity = '1'; 
                         creditBtn.style.borderColor = 'var(--warning)'; 
-                        creditBtn.innerText = 'WIFI NOW, BAYAD LATER! (Utang 3 Hrs / ₱10)';
+                        creditBtn.innerText = '💳 EMERGENCY UPLINK CREDIT (3 HRS / ₱10)';
                     } else {
-                        // UPDATED: Friendly localized rejection message
-                        creditBtn.onclick = () => alert('🔒 SORRY LODS!\n\nKailangan maka-gasto ka og ₱300 sa atong WiFi para ma-unlock ang Utang feature. Padayon lang og connect, ma-unlock ra ni nimo puhon!'); 
+                        // PROFESSIONAL BUSINESS TONE REJECTION TEXT
+                        creditBtn.onclick = () => alert('🔒 LOYALTY REWARD LOCKED\n\nEmergency Credit is a special perk reserved for our regular customers. Continue connecting to our network to build your account history and automatically unlock this feature! Thank you for your support.'); 
                         creditBtn.style.opacity = '0.4'; 
                         creditBtn.style.borderColor = '#555'; 
-                        creditBtn.innerText = '🔒 DI PA PWEDE LODS (Gasto sa\'g ₱300)';
+                        creditBtn.innerText = '🔒 EMERGENCY CREDIT (LOYALTY REWARD)';
                     }
                 }
                 if (data.credit_enabled !== 'true' && document.getElementById('screen-credit').classList.contains('active')) { showScreen('screen-menu'); }
