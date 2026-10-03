@@ -69,23 +69,23 @@
     <div id="screen-queue" class="screen active">
         <h2 id="queue-title">INITIALIZING...</h2>
         <div class="spinner" id="queue-spinner"></div>
-        <p id="queue-message">Establishing secure uplink.</p>
+        <p id="queue-message">Connecting to the Server...</p>
         <button class="btn-action btn-buy-more" id="btn-join-queue" style="display:none;" onclick="showScreen('screen-menu')">ACCESS NETWORK</button>
     </div>
 
     <!-- SCREEN 2: DYNAMIC RATE MENU -->
     <div id="screen-menu" class="screen">
-        <h2>SELECT PROTOCOL</h2>
+        <h2>GET CONNECTED NOW</h2>
         <p style="font-size: 0.9rem; color: #8892b0;">Transfer credits to system admin upon selection.</p>
         
-        <div class="tier-header">>> STD. BANDWIDTH [5MBPS]</div>
+        <div class="tier-header">>> HOURLY RATE</div>
         <div id="std-menu" class="grid-menu"></div>
 
-        <div class="tier-header vip-header">>> OVERCLOCK [10MBPS]</div>
+        <div class="tier-header vip-header">>> DAILY RATE</div>
         <div id="vip-menu" class="grid-menu" style="margin-bottom: 20px;"></div>
 
         <div id="credit-section" style="display: none;">
-            <div class="tier-header credit-header">>> EMERGENCY UPLINK <<</div>
+            <div class="tier-header credit-header">>> UTANG/CREDIT <<</div>
             <button id="btn-credit-request" class="btn-action" style="background: transparent; border: 1px solid var(--warning); color: var(--warning);">💳 EMERGENCY UPLINK CREDIT (3 HRS / ₱10)</button>
         </div>
         <button id="btn-back-dash" class="btn-action btn-buy-more" style="display:none; margin-top: 20px;" onclick="showScreen('screen-dashboard')">RETURN TO DASHBOARD</button>
@@ -93,20 +93,20 @@
 
     <!-- SCREEN 3: CREDIT FORM -->
     <div id="screen-credit" class="screen">
-        <h2 style="color: var(--warning); text-shadow: 0 0 10px rgba(255, 0, 60, 0.5);">EMERGENCY CREDIT AUTH</h2>
+        <h2 style="color: var(--warning); text-shadow: 0 0 10px rgba(255, 0, 60, 0.5);">UTANG/CREDIT </h2>
         <p style="color: #8892b0; font-size: 0.95rem; margin-bottom: 20px; line-height: 1.4;">Need more time? Activate a 3-hour emergency network uplink now and settle your ₱10 balance later. Please verify your identity below.</p>
         
         <input type="text" id="credit-name" class="input-field" placeholder="Full Name (Required)">
         <input type="text" id="credit-address" class="input-field" placeholder="Specific Address (Required)">
         <p id="credit-error" style="color: var(--warning); font-size: 0.9rem; display: none; font-weight: bold;"></p>
         
-        <button class="btn-action" style="background: var(--warning); color: white;" onclick="submitCredit()">ACTIVATE UPLINK</button>
+        <button class="btn-action" style="background: var(--warning); color: white;" onclick="submitCredit()">ACTIVATE</button>
         <button class="btn-action btn-buy-more" onclick="showScreen('screen-menu')">CANCEL</button>
     </div>
 
     <!-- SCREEN 4: DASHBOARD (PLAY/PAUSE) -->
     <div id="screen-dashboard" class="screen">
-        <h2>UPLINK STATUS</h2>
+        <h2>CONNECTION STATUS</h2>
         <div id="status-badge" class="status-badge status-paused">OFFLINE</div>
         <p id="time-label" style="color: #8892b0; margin-bottom: -10px; font-family: 'Orbitron', sans-serif; font-size: 0.8rem; letter-spacing: 2px;">SYS. TIME REMAINING</p>
         
@@ -114,8 +114,8 @@
         
         <div id="expiry-badge" style="color: var(--warning); font-size: 0.85rem; font-weight: bold; margin-bottom: 15px; font-family: 'Rajdhani', sans-serif;"></div>
 
-        <button class="btn-action btn-play" id="btn-play" onclick="toggleConnection('play')">ENGAGE UPLINK</button>
-        <button class="btn-action btn-pause" id="btn-pause" onclick="toggleConnection('pause')" style="display:none;">SUSPEND UPLINK</button>
+        <button class="btn-action btn-play" id="btn-play" onclick="toggleConnection('play')">STAY CONNECTED</button>
+        <button class="btn-action btn-pause" id="btn-pause" onclick="toggleConnection('pause')" style="display:none;">PAUSE</button>
         <button class="btn-action btn-buy-more" onclick="showScreen('screen-menu')" style="margin-top: 15px;">AQUIRE MORE TIME</button>
     </div>
 </div>
@@ -173,7 +173,7 @@
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => { sendCreditAPI(name, address, position.coords.latitude, position.coords.longitude); },
-                (error) => { showScreen('screen-credit'); document.getElementById('credit-error').innerText = "SECURITY ALERT: You must tap 'Allow Location' to request an emergency uplink."; document.getElementById('credit-error').style.display = "block"; },
+                (error) => { showScreen('screen-credit'); document.getElementById('credit-error').innerText = "SECURITY ALERT: You must tap 'Allow Location' to request an utang/credit."; document.getElementById('credit-error').style.display = "block"; },
                 { enableHighAccuracy: true, timeout: 15000 }
             );
         } else { showScreen('screen-credit'); document.getElementById('credit-error').innerText = "Your device does not support GPS location."; document.getElementById('credit-error').style.display = "block"; }
