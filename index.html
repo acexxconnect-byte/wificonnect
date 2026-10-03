@@ -102,7 +102,6 @@
         
         <button id="btn-back-dash" class="btn-action btn-buy-more" style="display:none; margin-top: 20px;" onclick="showScreen('screen-dashboard')">RETURN TO DASHBOARD</button>
 
-        <!-- OFFLINE GAME BUTTON -->
         <button class="btn-action" style="background: transparent; border: 1px dashed var(--success); color: var(--success); margin-top: 15px; font-size: 1rem;" onclick="playArcadeClicked()">👾 PLAY NEON SNAKE</button>
     </div>
 
@@ -137,7 +136,6 @@
     <!-- SCREEN 5: OFFLINE SNAKE GAME WITH REWARD HUD -->
     <div id="screen-game" class="screen">
         <h2 style="color: var(--secondary); text-shadow: 0 0 10px var(--secondary-glow);">NEON SNAKE</h2>
-        <!-- DYNAMIC REWARD INSTRUCTIONS -->
         <p style="color: var(--primary); font-size: 0.9rem; font-weight: bold; margin-top: -10px;">🎁 SCORE <span id="target-score-display1">200</span> FOR 1 HOUR FREE WIFI!</p>
         <p style="color: #8892b0; font-size: 0.8rem; margin-top: -5px;">Current Score: <span id="game-score" style="color: var(--success); font-weight: bold; font-size: 1rem;">0</span> / <span id="target-score-display2">200</span></p>
         
@@ -171,7 +169,7 @@
 
     let currentRatesString = '';
     let userHasDebt = false; 
-    let targetScore = 200; // Default target score
+    let targetScore = 200;
 
     function showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -309,7 +307,6 @@
                 
                 if (data.rates && !data.rates.error) renderRates(data.rates);
 
-                // DYNAMICALLY UPDATE ARCADE TARGET SCORE
                 if (data.arcade_target) {
                     targetScore = parseInt(data.arcade_target);
                     document.getElementById('target-score-display1').innerText = targetScore;
@@ -412,7 +409,6 @@
     const spacing = 6; 
     const radius = 6;
 
-    // Triggered when button is clicked
     function playArcadeClicked() {
         alert(`🎮 PLAY TO WIN!\n\nScore exactly ${targetScore} points in Neon Snake to instantly unlock 1 HOUR of free Wi-Fi!\n\nSwipe your screen or use the D-Pad buttons to control the snake. Good luck!`);
         startGame(); 
@@ -494,11 +490,12 @@
             bodyLength += 4;
             document.getElementById('game-score').innerText = score;
             
-            // DYNAMIC WIN CONDITION BASED ON ADMIN SETTING
             if (score >= targetScore) {
+                // FIXED: Immediately halt the game loop BEFORE the timeout triggers
+                stopGame(); 
+                
                 drawGame(); 
                 setTimeout(() => {
-                    stopGame();
                     alert(`🎉 CONGRATULATIONS!\n\nYou scored ${targetScore} points! You have won 1 HOUR of free Wi-Fi! Activating your uplink now...`);
                     
                     fetch(`/api?action=reward_win&mac=${clientMac}`)
