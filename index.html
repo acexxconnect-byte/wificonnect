@@ -75,7 +75,7 @@
         /* CUSTOM IN-APP MODAL */
         #custom-modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 10, 12, 0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; }
         #modal-title { font-size: 1.8rem; margin-bottom: 15px; color: var(--primary); text-shadow: 0 0 10px var(--primary-glow); }
-        #modal-desc { color: #e0e0e0; font-size: 1.1rem; margin-bottom: 25px; line-height: 1.5; }
+        #modal-desc { color: #e0e0e0; font-size: 1.1rem; margin-bottom: 25px; line-height: 1.5; white-space: pre-wrap;}
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 5px var(--primary-glow); } 50% { box-shadow: 0 0 20px var(--primary-glow); } }
@@ -168,6 +168,8 @@
         
         <canvas id="gameCanvas" width="280" height="260"></canvas>
         
+        <button id="btn-claim-reward" class="btn-action" style="display:none; background: var(--success); color: #000; box-shadow: 0 0 20px var(--success); margin-top: 15px; animation: pulse-glow 2s infinite; transition: 0.3s;" onclick="claimReward()">🎁 GET REWARD!</button>
+        
         <div class="dpad">
             <button class="dpad-btn dpad-up" onpointerdown="changeDir(0, -1)">▲</button>
             <button class="dpad-btn dpad-left" onpointerdown="changeDir(-1, 0)">◀</button>
@@ -225,12 +227,30 @@
             btn2.style.display = 'none';
         }
         
-        document.getElementById('modal-btn-close').style.display = showClose ? 'block' : 'none';
+        let btnClose = document.getElementById('modal-btn-close');
+        btnClose.style.display = showClose ? 'block' : 'none';
+        btnClose.onclick = closeModal;
+        
         document.getElementById('custom-modal').style.display = 'flex';
     }
 
     function closeModal() {
         document.getElementById('custom-modal').style.display = 'none';
+    }
+
+    /* FORMAT COOLDOWN TIME HELPER */
+    function formatCooldown(endTime) {
+        const diff = endTime - Date.now();
+        if (diff <= 0) return "0 minutes";
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff % 86400000) / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        let str = [];
+        if (d > 0) str.push(`${d} day${d > 1 ? 's' : ''}`);
+        if (h > 0) str.push(`${h} hr${h > 1 ? 's' : ''}`);
+        if (m > 0) str.push(`${m} min${m > 1 ? 's' : ''}`);
+        if (str.length === 0) return "less than a minute";
+        return str.join(', ');
     }
 
     function showScreen(screenId) {
@@ -459,10 +479,10 @@
         showScreen('screen-game');
         
         if (rewardCooldownEnd > Date.now()) {
-            const hoursLeft = Math.ceil((rewardCooldownEnd - Date.now()) / 3600000);
-            openModal("PLAY FOR FUN", `You already claimed your reward recently!\nYour next free Wi-Fi unlocks in ${hoursLeft} hours.\n\nYou can still play for a high score. Swipe to move!`, "START GAME", startGame, null, null, true);
+            const timeStr = formatCooldown(rewardCooldownEnd);
+            openModal("PLAY FOR FUN", `You already earned your free Wi-Fi recently! Please wait ${timeStr} before claiming another.\n\nYou can still play for a high score. Swipe to move!`, "START GAME", startGame, null, null, true);
             
-            document.getElementById('reward-text').innerText = `⏳ REWARD ON COOLDOWN (${hoursLeft} HRS LEFT)`;
+            document.getElementById('reward-text').innerText = `⏳ REWARD ON COOLDOWN (${timeStr})`;
             document.getElementById('reward-text').style.color = 'var(--warning)';
         } else {
             openModal("PLAY TO WIN!", `Score exactly ${targetScore} points in Neon Snake to instantly unlock 1 HOUR of free Wi-Fi!\n\nSwipe your screen or use the D-Pad to control the snake.`, "START GAME", startGame, null, null, true);
@@ -487,6 +507,12 @@
         score = 0;
         bodyLength = 10;
         targetReachedEventFired = false; 
+        
+        const claimBtn = document.getElementById('btn-claim-reward');
+        claimBtn.style.display = 'none';
+        claimBtn.innerText = '🎁 GET REWARD!';
+        claimBtn.style.opacity = '1';
+        claimBtn.onclick = claimReward; 
 
         document.getElementById('game-score').innerText = score;
         spawnFood();
@@ -553,13 +579,14 @@
 
     function claimReward() {
         if (rewardCooldownEnd > Date.now()) {
-            const hoursLeft = Math.ceil((rewardCooldownEnd - Date.now()) / 3600000);
-            openModal("REWARD ON COOLDOWN", `You already earned your free Wi-Fi recently! Please wait ${hoursLeft} hours before claiming another.`, "OK", null);
+            const timeStr = formatCooldown(rewardCooldownEnd);
+            openModal("REWARD ON COOLDOWN", `You already earned your free Wi-Fi recently! Please wait ${timeStr} before claiming another.`, "OK", null);
             return;
         }
         
         document.getElementById('custom-modal').style.display = 'flex';
         document.getElementById('modal-title').innerText = "ACTIVATING UPLINK...";
+        document.getElementById('modal-title').style.color = "var(--primary)";
         document.getElementById('modal-desc').innerText = "Verifying reward and securing connection...";
         document.getElementById('modal-btn-1').style.display = 'none';
         document.getElementById('modal-btn-2').style.display = 'none';
@@ -619,6 +646,7 @@
                     `You successfully scored ${targetScore} points!\n\nDo you want to claim your 1 HOUR of free Wi-Fi now, or keep playing to set a new high score?`, 
                     "🎁 GET REWARD", claimReward, 
                     "KEEP PLAYING", () => {
+                        document.getElementById('btn-claim-reward').style.display = 'block';
                         if (gameLoop) clearInterval(gameLoop);
                         gameLoop = setInterval(updateGame, 16);
                     }
