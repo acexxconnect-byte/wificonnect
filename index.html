@@ -76,7 +76,6 @@
     <div class="brand-header"><img src="logo.png" alt="JAC'S WIFI - MAX SPEED. NO LAG." class="brand-logo"></div>
     <div class="mac-display" id="mac-address-label">SYS_ID: UNKNOWN</div>
 
-    <!-- SCREEN 1: LOADING & QUEUE -->
     <div id="screen-queue" class="screen active">
         <h2 id="queue-title">INITIALIZING...</h2>
         <div class="spinner" id="queue-spinner"></div>
@@ -84,7 +83,6 @@
         <button class="btn-action btn-buy-more" id="btn-join-queue" style="display:none;" onclick="showScreen('screen-menu')">ACCESS NETWORK</button>
     </div>
 
-    <!-- SCREEN 2: DYNAMIC RATE MENU -->
     <div id="screen-menu" class="screen">
         <h2>GET CONNECTED NOW</h2>
         <p style="font-size: 0.9rem; color: #8892b0;">Transfer credits to system admin upon selection.</p>
@@ -106,7 +104,6 @@
         <button class="btn-action" style="background: transparent; border: 1px dashed var(--success); color: var(--success); margin-top: 15px; font-size: 1rem;" onclick="startGame(); showScreen('screen-game')">👾 PLAY NEON SNAKE</button>
     </div>
 
-    <!-- SCREEN 3: CREDIT FORM -->
     <div id="screen-credit" class="screen">
         <h2 style="color: var(--warning); text-shadow: 0 0 10px rgba(255, 0, 60, 0.5);">UTANG/CREDIT </h2>
         <p style="color: #8892b0; font-size: 0.95rem; margin-bottom: 20px; line-height: 1.4;">Need more time? Activate a 3-hour emergency network uplink now and settle your ₱10 balance later. Please verify your identity below.</p>
@@ -119,7 +116,6 @@
         <button class="btn-action btn-buy-more" onclick="showScreen('screen-menu')">CANCEL</button>
     </div>
 
-    <!-- SCREEN 4: DASHBOARD (PLAY/PAUSE) -->
     <div id="screen-dashboard" class="screen">
         <h2>CONNECTION STATUS</h2>
         <div id="status-badge" class="status-badge status-paused">OFFLINE</div>
@@ -134,14 +130,15 @@
         <button class="btn-action btn-buy-more" onclick="showScreen('screen-menu')" style="margin-top: 15px;">AQUIRE MORE TIME</button>
     </div>
 
-    <!-- SCREEN 5: OFFLINE SNAKE GAME -->
+    <!-- SCREEN 5: OFFLINE SNAKE GAME WITH REWARD HUD -->
     <div id="screen-game" class="screen">
         <h2 style="color: var(--secondary); text-shadow: 0 0 10px var(--secondary-glow);">NEON SNAKE</h2>
-        <p style="color: #8892b0; font-size: 0.8rem; margin-top: -10px;">Play offline while waiting! Score: <span id="game-score" style="color: var(--success); font-weight: bold; font-size: 1rem;">0</span></p>
+        <!-- NEW: Reward Instructions -->
+        <p style="color: var(--primary); font-size: 0.9rem; font-weight: bold; margin-top: -10px;">🎁 SCORE 200 FOR 1 HOUR FREE WIFI!</p>
+        <p style="color: #8892b0; font-size: 0.8rem; margin-top: -5px;">Current Score: <span id="game-score" style="color: var(--success); font-weight: bold; font-size: 1rem;">0</span> / 200</p>
         
         <canvas id="gameCanvas" width="280" height="260"></canvas>
         
-        <!-- Mobile Touch Controls -->
         <div class="dpad">
             <button class="dpad-btn dpad-up" onpointerdown="changeDir(0, -1)">▲</button>
             <button class="dpad-btn dpad-left" onpointerdown="changeDir(-1, 0)">◀</button>
@@ -156,8 +153,16 @@
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     let clientMac = urlParams.get('clientMac');
-    if (!clientMac) { clientMac = localStorage.getItem('saved_mac') || 'TEST-MAC-' + Math.floor(Math.random() * 1000); }
-    localStorage.setItem('saved_mac', clientMac);
+    
+    try {
+        if (!clientMac) clientMac = localStorage.getItem('saved_mac');
+        if (!clientMac) clientMac = 'TEST-MAC-' + Math.floor(Math.random() * 1000);
+        localStorage.setItem('saved_mac', clientMac);
+    } catch(e) {
+        if (!clientMac) clientMac = 'TEST-MAC-' + Math.floor(Math.random() * 1000);
+        console.warn("Captive portal blocking localStorage. Using temporary MAC.");
+    }
+    
     document.getElementById('mac-address-label').innerText = 'SYS_ID: ' + clientMac;
 
     let currentRatesString = '';
@@ -189,7 +194,10 @@
         document.getElementById('vip-menu').innerHTML = vipHtml;
     }
 
-    fetch('/api?action=get_rates').then(res => res.json()).then(rates => { if (!rates.error) renderRates(rates); });
+    fetch('/api?action=get_rates')
+        .then(res => res.json())
+        .then(rates => { if (!rates.error) renderRates(rates); })
+        .catch(err => console.error("Rates not loaded yet"));
 
     function requestPlan(planCode, price) {
         if (userHasDebt) {
@@ -288,7 +296,10 @@
 
     setInterval(() => {
         fetch(`/api?action=status&mac=${clientMac}`)
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error("Backend offline");
+                return res.json();
+            })
             .then(data => {
                 
                 if (data.rates && !data.rates.error) renderRates(data.rates);
@@ -362,11 +373,18 @@
                         showScreen('screen-queue'); document.getElementById('queue-title').innerText = 'SYSTEM READY'; document.getElementById('queue-spinner').style.display = 'none'; document.getElementById('queue-message').innerText = 'Select to view available protocols.'; document.getElementById('btn-join-queue').style.display = 'block';
                     }
                 }
-            }).catch(err => console.error("API Error:", err));
+            })
+            .catch(err => {
+                console.error("API Error:", err);
+                const qMsg = document.getElementById('queue-message');
+                if (qMsg && document.getElementById('screen-queue').classList.contains('active')) {
+                    qMsg.innerText = "Network Error: Reconnecting to Server...";
+                }
+            });
     }, 3000);
 
     /* =========================================
-       SMOOTH NEON SNAKE ENGINE (60 FPS)
+       SMOOTH NEON SNAKE ENGINE (60 FPS) WITH REWARD SYSTEM
        ========================================= */
     let gameLoop;
     let canvas, ctx;
@@ -400,7 +418,7 @@
         spawnFood();
         
         if (gameLoop) clearInterval(gameLoop);
-        gameLoop = setInterval(updateGame, 16); // 60 FPS smooth rendering
+        gameLoop = setInterval(updateGame, 16); 
     }
 
     function stopGame() {
@@ -408,13 +426,11 @@
     }
 
     function changeDir(dx, dy) {
-        // Prevent snake from reversing into itself
         if (dx !== 0 && currentDir.dx !== 0) return;
         if (dy !== 0 && currentDir.dy !== 0) return;
         nextDir = { dx: dx * speed, dy: dy * speed };
     }
 
-    // Smooth Touch Swipe Controls
     let touchStartX = 0; let touchStartY = 0;
     document.getElementById('gameCanvas').addEventListener('touchstart', e => {
         touchStartX = e.changedTouches[0].screenX;
@@ -438,30 +454,42 @@
         head.x += currentDir.dx;
         head.y += currentDir.dy;
 
-        // Save position history for smooth trailing body
         snake.push({ x: head.x, y: head.y });
         while (snake.length > bodyLength * spacing + 1) {
             snake.shift();
         }
 
-        // Wall Collision (Death)
         if (head.x < radius || head.x > canvas.width - radius || head.y < radius || head.y > canvas.height - radius) {
             gameOver(); return;
         }
 
-        // Self Collision
         for (let i = 0; i < snake.length - spacing * 3; i++) {
             let part = snake[i];
             let dist = Math.hypot(head.x - part.x, head.y - part.y);
             if (dist < radius) { gameOver(); return; }
         }
 
-        // Food Collision
         let distToFood = Math.hypot(head.x - food.x, head.y - food.y);
         if (distToFood < radius * 2) {
             score += 10;
             bodyLength += 4;
             document.getElementById('game-score').innerText = score;
+            
+            // NEW: REWARD LOGIC - If score hits 200, grant 1 free hour
+            if (score >= 200) {
+                drawGame(); 
+                setTimeout(() => {
+                    stopGame();
+                    alert("🎉 CONGRATULATIONS!\n\nYou scored 200 points! You have won 1 HOUR of free Wi-Fi! Activating your uplink now...");
+                    
+                    fetch(`/api?action=reward_win&mac=${clientMac}`)
+                        .then(() => {
+                            showScreen('screen-dashboard');
+                        });
+                }, 50);
+                return;
+            }
+
             spawnFood();
         }
 
@@ -474,11 +502,9 @@
     }
 
     function drawGame() {
-        // Background
         ctx.fillStyle = '#111116';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Glowing Food
         ctx.fillStyle = '#ff003c';
         ctx.shadowBlur = 10;
         ctx.shadowColor = '#ff003c';
@@ -487,7 +513,6 @@
         ctx.fill();
         ctx.shadowBlur = 0; 
 
-        // Glowing Snake Body
         ctx.fillStyle = '#00d2ff';
         ctx.shadowBlur = 10;
         ctx.shadowColor = '#00d2ff';
@@ -500,7 +525,6 @@
             }
         }
         
-        // Snake Head
         ctx.fillStyle = '#ff8c00';
         ctx.beginPath();
         ctx.arc(head.x, head.y, radius + 2, 0, Math.PI * 2);
