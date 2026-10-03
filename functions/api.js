@@ -5,7 +5,7 @@ export async function onRequest(context) {
     const action = url.searchParams.get('action');
     const mac = url.searchParams.get('mac');
 
-    const adminActions = ['admin_list', 'admin_active_list', 'admin_credit_list', 'admin_clear_credit', 'admin_get_settings', 'admin_toggle_credit', 'admin_save_rates', 'get_rates'];
+    const adminActions = ['admin_list', 'admin_active_list', 'admin_credit_list', 'admin_clear_credit', 'admin_get_settings', 'admin_toggle_credit', 'admin_save_rates', 'get_rates', 'admin_save_arcade'];
     if (!mac && !adminActions.includes(action)) {
         return Response.json({ error: 'Missing MAC Address' }, { status: 400 });
     }
@@ -54,13 +54,23 @@ export async function onRequest(context) {
             return Response.json({ success: true });
         }
 
+        // NEW: Endpoint to save Arcade Target Score
+        if (action === 'admin_save_arcade') {
+            const ts = url.searchParams.get('target');
+            await env.DB.prepare("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('arcade_target_score', ?)").bind(ts).run();
+            return Response.json({ success: true });
+        }
+
         if (action === 'admin_get_settings') {
             let creditEnabled = 'false';
+            let arcadeTarget = '200';
             try {
                 const setting = await env.DB.prepare("SELECT value FROM system_settings WHERE key = 'credit_enabled'").first();
                 if (setting) creditEnabled = setting.value;
+                const setting2 = await env.DB.prepare("SELECT value FROM system_settings WHERE key = 'arcade_target_score'").first();
+                if (setting2) arcadeTarget = setting2.value;
             } catch(e) {} 
-            return Response.json({ credit_enabled: creditEnabled });
+            return Response.json({ credit_enabled: creditEnabled, arcade_target: arcadeTarget });
         }
 
         if (action === 'admin_toggle_credit') {
@@ -74,11 +84,10 @@ export async function onRequest(context) {
             return Response.json({ success: true, credit_enabled: newVal });
         }
 
-        // NEW: Arcade Reward System Endpoint
         if (action === 'reward_win') {
             const existingSession = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
-            const addedTimeMs = 24 * 3600000; // 24 hours validity
-            const rewardMins = 60; // 1 Hour free
+            const addedTimeMs = 24 * 3600000; 
+            const rewardMins = 60; 
             
             if (existingSession) {
                 let baseTime = (existingSession.expires_at && existingSession.expires_at > Date.now()) ? existingSession.expires_at : Date.now();
@@ -175,7 +184,11 @@ export async function onRequest(context) {
 
         if (action === 'status') {
             let creditEnabled = 'false';
-            try { const setting = await env.DB.prepare("SELECT value FROM system_settings WHERE key = 'credit_enabled'").first(); if (setting) creditEnabled = setting.value; } catch(e) {}
+            let arcadeTarget = 200;
+            try { 
+                const setting = await env.DB.prepare("SELECT value FROM system_settings WHERE key = 'credit_enabled'").first(); if (setting) creditEnabled = setting.value; 
+                const setting2 = await env.DB.prepare("SELECT value FROM system_settings WHERE key = 'arcade_target_score'").first(); if (setting2) arcadeTarget = parseInt(setting2.value);
+            } catch(e) {}
 
             const rates = await getRates();
             let sessionAll = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
@@ -194,14 +207,14 @@ export async function onRequest(context) {
                     const ahead = await env.DB.prepare("SELECT COUNT(*) as count FROM digital_queue WHERE status = 'waiting' AND joined_at < ?").bind(queue.joined_at).first();
                     position = ahead.count + 1;
                 }
-                return Response.json({ type: 'queue', data: queue, position: position, credit_enabled: creditEnabled, eligible: isEligible, rates: rates, has_debt: hasDebt });
+                return Response.json({ type: 'queue', data: queue, position: position, credit_enabled: creditEnabled, eligible: isEligible, rates: rates, has_debt: hasDebt, arcade_target: arcadeTarget });
             }
 
             if (sessionAll && sessionAll.total_minutes_bought > sessionAll.minutes_used) {
-                return Response.json({ type: 'dashboard', data: sessionAll, credit_enabled: creditEnabled, eligible: isEligible, rates: rates, has_debt: hasDebt });
+                return Response.json({ type: 'dashboard', data: sessionAll, credit_enabled: creditEnabled, eligible: isEligible, rates: rates, has_debt: hasDebt, arcade_target: arcadeTarget });
             }
 
-            return Response.json({ type: 'none', credit_enabled: creditEnabled, eligible: isEligible, rates: rates, has_debt: hasDebt });
+            return Response.json({ type: 'none', credit_enabled: creditEnabled, eligible: isEligible, rates: rates, has_debt: hasDebt, arcade_target: arcadeTarget });
         }
 
         if (action === 'join') {
