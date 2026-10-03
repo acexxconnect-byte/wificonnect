@@ -83,7 +83,7 @@ export async function onRequest(context) {
             if (spent < 300) return Response.json({ error: 'ACCESS DENIED: You must spend a total of ₱300 to unlock emergency credit.' });
 
             const existingDebt = await env.DB.prepare("SELECT * FROM credits_log WHERE client_mac = ?").bind(mac).first();
-            if (existingDebt) return Response.json({ error: 'ACCESS DENIED: Unpaid credit balance.' });
+            if (existingDebt) return Response.json({ error: 'You have credit from the last time you connect, Please pay your remaining credit to connect, Enjoy' });
 
             const newExpiry = Date.now() + (24 * 3600000); 
             
@@ -148,7 +148,6 @@ export async function onRequest(context) {
         if (action === 'admin_suspend') {
             const session = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
             if (session && session.status === 'playing' && session.last_play_time) {
-                // FIXED: Replace space with T to prevent NaN crash, removed Math.floor for exact seconds tracking
                 const startTime = new Date(session.last_play_time.replace(' ', 'T') + 'Z').getTime(); 
                 const minutesPlayed = (Date.now() - startTime) / 60000;
                 const newTotalUsed = session.minutes_used + minutesPlayed;
@@ -168,6 +167,10 @@ export async function onRequest(context) {
             const spent = sessionAll ? (sessionAll.total_spent || 0) : 0;
             const isEligible = spent >= 300;
 
+            // Check if user has an unpaid credit
+            const existingDebt = await env.DB.prepare("SELECT * FROM credits_log WHERE client_mac = ?").bind(mac).first();
+            const hasDebt = existingDebt ? true : false;
+
             const queue = await env.DB.prepare("SELECT * FROM digital_queue WHERE client_mac = ?").bind(mac).first();
             if (queue) {
                 let position = 1;
@@ -175,21 +178,27 @@ export async function onRequest(context) {
                     const ahead = await env.DB.prepare("SELECT COUNT(*) as count FROM digital_queue WHERE status = 'waiting' AND joined_at < ?").bind(queue.joined_at).first();
                     position = ahead.count + 1;
                 }
-                return Response.json({ type: 'queue', data: queue, position: position, credit_enabled: creditEnabled, eligible: isEligible, rates: rates });
+                return Response.json({ type: 'queue', data: queue, position: position, credit_enabled: creditEnabled, eligible: isEligible, rates: rates, has_debt: hasDebt });
             }
 
             if (sessionAll && sessionAll.total_minutes_bought > sessionAll.minutes_used) {
-                return Response.json({ type: 'dashboard', data: sessionAll, credit_enabled: creditEnabled, eligible: isEligible, rates: rates });
+                return Response.json({ type: 'dashboard', data: sessionAll, credit_enabled: creditEnabled, eligible: isEligible, rates: rates, has_debt: hasDebt });
             }
 
-            return Response.json({ type: 'none', credit_enabled: creditEnabled, eligible: isEligible, rates: rates });
+            return Response.json({ type: 'none', credit_enabled: creditEnabled, eligible: isEligible, rates: rates, has_debt: hasDebt });
         }
 
         if (action === 'join') {
+            const existingDebt = await env.DB.prepare("SELECT * FROM credits_log WHERE client_mac = ?").bind(mac).first();
+            if (existingDebt) return Response.json({ error: 'You have credit from the last time you connect, Please pay your remaining credit to connect, Enjoy' });
+
             await env.DB.prepare("INSERT OR IGNORE INTO digital_queue (client_mac, status) VALUES (?, 'waiting')").bind(mac).run();
             return Response.json({ success: true });
         }
         if (action === 'request') {
+            const existingDebt = await env.DB.prepare("SELECT * FROM credits_log WHERE client_mac = ?").bind(mac).first();
+            if (existingDebt) return Response.json({ error: 'You have credit from the last time you connect, Please pay your remaining credit to connect, Enjoy' });
+
             const plan = url.searchParams.get('plan'); const rates = await getRates(); const amount = rates[plan] ? rates[plan].p : 0;
             await env.DB.prepare("UPDATE digital_queue SET requested_plan = ?, payment_amount = ? WHERE client_mac = ?").bind(plan, amount, mac).run();
             return Response.json({ success: true });
@@ -208,7 +217,6 @@ export async function onRequest(context) {
         if (action === 'pause') {
             const session = await env.DB.prepare("SELECT * FROM wifi_sessions WHERE client_mac = ?").bind(mac).first();
             if (session && session.status === 'playing' && session.last_play_time) {
-                // FIXED: Replace space with T to prevent NaN crash, removed Math.floor for exact seconds tracking
                 const startTime = new Date(session.last_play_time.replace(' ', 'T') + 'Z').getTime();
                 const minutesPlayed = (Date.now() - startTime) / 60000;
                 const newTotalUsed = session.minutes_used + minutesPlayed;
